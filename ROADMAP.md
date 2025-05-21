@@ -52,7 +52,10 @@ Melhorias e funcionalidades extras a serem consideradas após a implementação 
     *   [X] Salvar as configurações do usuário (via `config.json`).
     *   [ ] Adicionar uma tela de configuração gráfica para o addon.
 *   **3.4. Otimização de Performance:**
-    *   [ ] Analisar o desempenho, especialmente com coleções muito grandes.
+    *   [X - Revisar] Otimizada a busca da data da última revisão para tooltips (consulta em lote em vez de individual por cartão).
+    *   [X - Revisar] Otimizado o cálculo da data "hoje" (mw.col.sched.today), calculando-a uma vez por renderização da grade.
+    *   [X - Revisar] Otimizada a leitura de configurações (gradient_ivl_min/max) para tooltips no modo gradiente IVL (lido uma vez por renderização).
+    *   [ ] Analisar o desempenho, especialmente com coleções muito grandes (além das otimizações já feitas).
 *   **3.5. Customização de Aparência:**
     *   [X] Tamanho dos tiles e espaçamento configuráveis via `config.json`.
     *   [X] Direção do gradiente configurável por campo (`gradient_<field>_order`) via `config.json`.
