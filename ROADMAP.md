@@ -73,5 +73,3 @@ Memory Mosaic 🟥🟨🟩🟦
 anki mosaic visual grid cards color status tiles interactive tracking overview
 https://github.com/cjdduarte/MemoryMosaic/issues
 
-2.1.50
-25.02.5
