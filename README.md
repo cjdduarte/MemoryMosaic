@@ -99,7 +99,7 @@ O Memory Mosaic é um addon para o Anki que transforma sua coleção de cartões
 
 ### Licença e Contato
 
-- **Copyright(C)** [Seu Nome Aqui]
+- **Copyright(C)** [Carlos Duarte]
 - Licenciado sob [GNU AGPL, version 3](http://www.gnu.org/licenses/agpl.html)
 - Para bugs ou sugestões, por favor, abra uma issue em [https://github.com/cjdduarte/MemoryMosaic/issues](https://github.com/cjdduarte/MemoryMosaic/issues).
 
