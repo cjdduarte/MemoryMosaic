@@ -251,7 +251,7 @@ def _render_memorymosaic_grid_html(overview_deck_name: str | None = None) -> str
     <h4 style="margin: 0 15px 0 0; padding:0;">{tr("addon_title")}:</h4>
     
     <div style="margin-right: 15px;">
-        <label for="memorymosaic-sort-order" style="margin-right: 5px; font-weight: normal; font-size: 14px;">{tr("sort_by_creation")}:</label>
+        <label for="memorymosaic-sort-order" style="margin-right: 5px; font-weight: normal; font-size: 14px;">{config.get("label_sort_order_group", "Ordenar por:")}</label>
         <select id="memorymosaic-sort-order" onchange="onMemoryMosaicSortOrderChanged(this.value)" style="padding: 5px; border-radius: 4px; border: 1px solid #ccc;">
             <option value="id_asc">{tr("sort_by_creation")}</option>
             <option value="ivl_asc">{tr("sort_by_interval_asc")}</option>

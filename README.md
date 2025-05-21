@@ -44,7 +44,12 @@ Memory Mosaic is an Anki addon that transforms your card collection into an inte
 
 *Add a screenshot of Memory Mosaic in action here.*
 
-`![Memory Mosaic example](placeholder_example.png)`
+`![Memory Mosaic example](https://i.ibb.co/8L2f5GjZ/image.png)`
+
+`![Memory Mosaic example](https://i.ibb.co/5XnVCRq0/image.png)`
+
+`![Memory Mosaic example](https://i.ibb.co/x8Jh5g4k/image.png)`
+
 
 ### How to install
 
@@ -58,7 +63,7 @@ Or install manually using the `.ankiaddon` file.
 
 - **Copyright(C)** [Your Name Here]
 - Licensed under [GNU AGPL, version 3](http://www.gnu.org/licenses/agpl.html)
-- For bugs or suggestions, open an issue in the project repository [link]
+- For bugs or suggestions, please open an issue at [https://github.com/cjdduarte/MDS_Time_Left/issues](https://github.com/cjdduarte/MDS_Time_Left/issues).
 
 ---
 
@@ -100,7 +105,12 @@ O Memory Mosaic é um addon para o Anki que transforma sua coleção de cartões
 
 *Adicione aqui uma screenshot do Memory Mosaic em ação.*
 
-`![Memory Mosaic exemplo](placeholder_example.png)`
+`![Memory Mosaic exemplo](https://i.ibb.co/8L2f5GjZ/image.png)`
+
+`![Memory Mosaic exemplo](https://i.ibb.co/5XnVCRq0/image.png)`
+
+`![Memory Mosaic exemplo](https://i.ibb.co/x8Jh5g4k/image.png)`
+
 
 ### Como instalar
 
@@ -114,20 +124,13 @@ Ou instale manualmente através do arquivo `.ankiaddon`.
 
 - **Copyright(C)** [Seu Nome Aqui]
 - Licenciado sob [GNU AGPL, version 3](http://www.gnu.org/licenses/agpl.html)
-- Para bugs ou sugestões, abra uma issue no repositório do projeto [link]
+- Para bugs ou sugestões, por favor, abra uma issue em [https://github.com/cjdduarte/MDS_Time_Left/issues](https://github.com/cjdduarte/MDS_Time_Left/issues).
 
 ## **Changelog**
 
-- **v1.0 - Initial Release**:
-  - Interactive visual grid for card visualization
-  - Two visualization modes: Card States and Gradient
-  - Color system for card states (new, mature, young, relearning, suspended)
-  - Gradient visualization by interval, ease factor, repetitions, lapses, or time until due
-  - Multiple sorting options (creation date, interval, due date)
-  - Integration with Deck Browser and Overview screen
-  - Automatic updates when navigating or syncing
-  - Tooltips with detailed information on mouse hover
-  - Interactivity to open cards in Anki's browser
-  - Current deck filtering
-  - Customizable settings (size, spacing, colors, gradient properties)
-  - Multilingual support
+- **v1.1 - 2025-05-21 - Bug fix & Improvements**:
+  - Corrected the sort order dropdown label to avoid redundancy and improve clarity.
+  - Added a specific configuration key (`label_sort_order_group`) for the sort order group label.
+  - Multilingual support for UI elements and messages.
+
+- **v1.0 - 2025-05-20 - Initial Release**:
