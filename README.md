@@ -44,11 +44,11 @@ Memory Mosaic is an Anki addon that transforms your card collection into an inte
 
 *Add a screenshot of Memory Mosaic in action here.*
 
-`![Memory Mosaic example](https://i.ibb.co/8L2f5GjZ/image.png)`
+![Memory Mosaic example](https://i.ibb.co/8L2f5GjZ/image.png)
 
-`![Memory Mosaic example](https://i.ibb.co/5XnVCRq0/image.png)`
+![Memory Mosaic example](https://i.ibb.co/5XnVCRq0/image.png)
 
-`![Memory Mosaic example](https://i.ibb.co/x8Jh5g4k/image.png)`
+![Memory Mosaic example](https://i.ibb.co/x8Jh5g4k/image.png)
 
 
 ### How to install
@@ -63,7 +63,7 @@ Or install manually using the `.ankiaddon` file.
 
 - **Copyright(C)** [Your Name Here]
 - Licensed under [GNU AGPL, version 3](http://www.gnu.org/licenses/agpl.html)
-- For bugs or suggestions, please open an issue at [https://github.com/cjdduarte/MDS_Time_Left/issues](https://github.com/cjdduarte/MDS_Time_Left/issues).
+- For bugs or suggestions, please open an issue at [https://github.com/cjdduarte/MemoryMosaic/issues](https://github.com/cjdduarte/MemoryMosaic/issues).
 
 ---
 
@@ -105,11 +105,11 @@ O Memory Mosaic é um addon para o Anki que transforma sua coleção de cartões
 
 *Adicione aqui uma screenshot do Memory Mosaic em ação.*
 
-`![Memory Mosaic exemplo](https://i.ibb.co/8L2f5GjZ/image.png)`
+![Memory Mosaic exemplo](https://i.ibb.co/8L2f5GjZ/image.png)
 
-`![Memory Mosaic exemplo](https://i.ibb.co/5XnVCRq0/image.png)`
+![Memory Mosaic exemplo](https://i.ibb.co/5XnVCRq0/image.png)
 
-`![Memory Mosaic exemplo](https://i.ibb.co/x8Jh5g4k/image.png)`
+![Memory Mosaic exemplo](https://i.ibb.co/x8Jh5g4k/image.png)
 
 
 ### Como instalar
@@ -124,7 +124,7 @@ Ou instale manualmente através do arquivo `.ankiaddon`.
 
 - **Copyright(C)** [Seu Nome Aqui]
 - Licenciado sob [GNU AGPL, version 3](http://www.gnu.org/licenses/agpl.html)
-- Para bugs ou sugestões, por favor, abra uma issue em [https://github.com/cjdduarte/MDS_Time_Left/issues](https://github.com/cjdduarte/MDS_Time_Left/issues).
+- Para bugs ou sugestões, por favor, abra uma issue em [https://github.com/cjdduarte/MemoryMosaic/issues](https://github.com/cjdduarte/MemoryMosaic/issues).
 
 ## **Changelog**
 
