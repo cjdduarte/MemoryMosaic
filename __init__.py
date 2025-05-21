@@ -5,6 +5,9 @@ import math
 from datetime import datetime
 from typing import Any
 
+# Adicionar este import para interpolação de cores
+import colorsys
+
 from aqt import mw
 from aqt.gui_hooks import (
     overview_will_render_content, 
@@ -25,6 +28,8 @@ from .translations import tr
 # Variáveis globais para controle de estado
 _memorymosaic_cached_config: dict | None = None
 _session_sort_order_override: str | None = None
+_session_view_mode_override: str | None = None
+_session_gradient_field_override: str | None = None
 _is_syncing: bool = False
 _is_closing: bool = False
 
@@ -114,6 +119,10 @@ def _render_memorymosaic_grid_html(overview_deck_name: str | None = None) -> str
        filtrados opcionalmente por MEMORYMOSAIC_DEFAULT_DECK_FILTER ou overview_deck_name."""
     global _session_sort_order_override # Necessário para modificar a global
     
+    # Variáveis de sessão para o modo de visualização e campo de gradiente
+    global _session_view_mode_override
+    global _session_gradient_field_override
+    
     # Verificação crucial no início da função
     if not mw or not mw.col or not mw.col.sched or not mw.col.db or not mw.col.decks:
         # Tenta usar tr() para a mensagem, com fallback se tr() não estiver disponível
@@ -125,6 +134,9 @@ def _render_memorymosaic_grid_html(overview_deck_name: str | None = None) -> str
             
     config = _get_addon_config()
     memorymosaic_default_deck_filter = config.get("memorymosaic_default_deck_filter")
+
+    # Espaçamento para separar o addon do conteúdo acima
+    spacing_html = '<div style="margin-top: 25px; border-top: 1px solid #e0e0e0; padding-top: 15px;"></div>'
 
     # Leitura da ordenação
     if _session_sort_order_override:
@@ -138,6 +150,32 @@ def _render_memorymosaic_grid_html(overview_deck_name: str | None = None) -> str
             current_sort_order_key = "id_asc" # Define explicitamente o padrão se ausente ou inválido
             if configured_sort_order is not None: # Log se foi fornecido um valor inválido
                 print(f"Memory Mosaic: Valor inválido '{configured_sort_order}' para 'memorymosaic_default_sort_order' no config.json. Usando padrão 'id_asc'.")
+    
+    # Leitura do modo de visualização
+    if _session_view_mode_override:
+        current_view_mode = _session_view_mode_override
+    else:
+        configured_view_mode = config.get("memorymosaic_default_view_mode")
+        valid_view_modes = ["categorical", "gradient"]
+        if configured_view_mode in valid_view_modes:
+            current_view_mode = configured_view_mode
+        else:
+            current_view_mode = "categorical"
+            if configured_view_mode is not None:
+                print(f"Memory Mosaic: Valor inválido '{configured_view_mode}' para 'memorymosaic_default_view_mode' no config.json. Usando padrão 'categorical'.")
+    
+    # Leitura do campo de gradiente
+    if _session_gradient_field_override:
+        current_gradient_field = _session_gradient_field_override
+    else:
+        configured_gradient_field = config.get("memorymosaic_default_gradient_field")
+        valid_gradient_fields = ["factor", "ivl", "reps", "lapses", "due"]
+        if configured_gradient_field in valid_gradient_fields:
+            current_gradient_field = configured_gradient_field
+        else:
+            current_gradient_field = "ivl"
+            if configured_gradient_field is not None:
+                print(f"Memory Mosaic: Valor inválido '{configured_gradient_field}' para 'memorymosaic_default_gradient_field' no config.json. Usando padrão 'ivl'.")
 
     # Mapeamento para a cláusula ORDER BY do banco de dados
     sort_order_map = {
@@ -205,18 +243,41 @@ def _render_memorymosaic_grid_html(overview_deck_name: str | None = None) -> str
 </div>
 '''
         # Não há contagem de status se não há cartões
-        return title_html_no_cards + message_no_cards + filter_info_footer_no_cards_html
+        return spacing_html + title_html_no_cards + message_no_cards + filter_info_footer_no_cards_html
 
-    # Título e Controles de Ordenação (agora combinados)
+    # Título e Controles de Ordenação e Visualização (agora com modo de visualização)
     title_and_controls_html = f'''
-<div id="memorymosaic-header-controls" style="display: flex; justify-content: center; align-items: center; margin-bottom: 10px; margin-top: 10px;">
+<div id="memorymosaic-header-controls" style="display: flex; justify-content: center; align-items: center; margin-bottom: 10px; margin-top: 10px; flex-wrap: wrap; gap: 10px;">
     <h4 style="margin: 0 15px 0 0; padding:0;">{tr("addon_title")}:</h4>
-    <select id="memorymosaic-sort-order" onchange="onMemoryMosaicSortOrderChanged(this.value)" style="padding: 5px; border-radius: 4px; border: 1px solid #ccc;">
-        <option value="id_asc">{tr("sort_by_creation")}</option>
-        <option value="ivl_asc">{tr("sort_by_interval_asc")}</option>
-        <option value="ivl_desc">{tr("sort_by_interval_desc")}</option>
-        <option value="due_asc">{tr("sort_by_due_date")}</option>
-    </select>
+    
+    <div style="margin-right: 15px;">
+        <label for="memorymosaic-sort-order" style="margin-right: 5px; font-weight: normal; font-size: 14px;">{tr("sort_by_creation")}:</label>
+        <select id="memorymosaic-sort-order" onchange="onMemoryMosaicSortOrderChanged(this.value)" style="padding: 5px; border-radius: 4px; border: 1px solid #ccc;">
+            <option value="id_asc">{tr("sort_by_creation")}</option>
+            <option value="ivl_asc">{tr("sort_by_interval_asc")}</option>
+            <option value="ivl_desc">{tr("sort_by_interval_desc")}</option>
+            <option value="due_asc">{tr("sort_by_due_date")}</option>
+        </select>
+    </div>
+    
+    <div style="margin-right: 15px;">
+        <label for="memorymosaic-view-mode" style="margin-right: 5px; font-weight: normal; font-size: 14px;">{tr("view_mode")}:</label>
+        <select id="memorymosaic-view-mode" onchange="onMemoryMosaicViewModeChanged(this.value)" style="padding: 5px; border-radius: 4px; border: 1px solid #ccc;">
+            <option value="categorical">{tr("view_categorical")}</option>
+            <option value="gradient">{tr("view_gradient")}</option>
+        </select>
+    </div>
+    
+    <div id="memorymosaic-gradient-field-container" style="display: {('block' if current_view_mode == 'gradient' else 'none')};">
+        <label for="memorymosaic-gradient-field" style="margin-right: 5px; font-weight: normal; font-size: 14px;">{tr("gradient_field")}:</label>
+        <select id="memorymosaic-gradient-field" onchange="onMemoryMosaicGradientFieldChanged(this.value)" style="padding: 5px; border-radius: 4px; border: 1px solid #ccc;">
+            <option value="factor">{tr("gradient_field_factor")}</option>
+            <option value="ivl">{tr("gradient_field_ivl")}</option>
+            <option value="reps">{tr("gradient_field_reps")}</option>
+            <option value="lapses">{tr("gradient_field_lapses")}</option>
+            <option value="due">{tr("gradient_field_due")}</option>
+        </select>
+    </div>
 </div>
 '''
 
@@ -282,10 +343,37 @@ def _render_memorymosaic_grid_html(overview_deck_name: str | None = None) -> str
 
     tiles_html_list = []
     color_counts = {} # Inicializa o contador de cores
+    gradient_value_stats = {} # Estatísticas para o modo gradiente
 
     for cid in cids: 
         card = mw.col.get_card(cid)
-        bg_color = _get_tile_bg_color(card, config)
+        
+        # Determinar a cor com base no modo de visualização
+        if current_view_mode == "gradient":
+            bg_color = _get_gradient_tile_color(card, current_gradient_field, config)
+            
+            # Coletar estatísticas para o modo gradiente
+            if card and current_gradient_field in ["factor", "ivl", "reps", "lapses", "due"]:
+                field_value = 0
+                if current_gradient_field == "factor":
+                    field_value = card.factor
+                elif current_gradient_field == "ivl":
+                    field_value = card.ivl
+                elif current_gradient_field == "reps":
+                    field_value = card.reps
+                elif current_gradient_field == "lapses":
+                    field_value = card.lapses
+                elif current_gradient_field == "due" and card.queue == 2:
+                    today = mw.col.sched.today
+                    field_value = max(0, card.due - today)
+                
+                # Agrupar valores para estatísticas simplificadas
+                if field_value not in gradient_value_stats:
+                    gradient_value_stats[field_value] = 0
+                gradient_value_stats[field_value] += 1
+        else:
+            bg_color = _get_tile_bg_color(card, config)
+        
         color_counts[bg_color] = color_counts.get(bg_color, 0) + 1 # Incrementa a contagem da cor
         
         due_indicator_html = ""
@@ -311,6 +399,43 @@ def _render_memorymosaic_grid_html(overview_deck_name: str | None = None) -> str
             tooltip_parts.append(tr("tooltip_queue", queue=card.queue))
             tooltip_parts.append(tr("tooltip_type", type=card.type))
             tooltip_parts.append(tr("tooltip_interval", interval=card.ivl))
+            
+            # Adicionar informações específicas do gradiente se no modo gradiente
+            if current_view_mode == "gradient":
+                if current_gradient_field == "factor":
+                    tooltip_parts.append(tr("gradient_tooltip_value", value=card.factor))
+                    tooltip_parts.append(tr("gradient_tooltip_range", min=config.get("gradient_factor_min", 1500), max=config.get("gradient_factor_max", 2900)))
+                elif current_gradient_field == "ivl":
+                    tooltip_parts.append(tr("gradient_tooltip_value", value=card.ivl))
+                    
+                    # Verificar se estamos no modo normalizado ou não
+                    normalize_ivl = config.get("gradient_normalize_ivl", True)
+                    min_val = config.get("gradient_ivl_min", 0)
+                    max_val = config.get("gradient_ivl_max", 365)
+                    
+                    if normalize_ivl:
+                        tooltip_parts.append(tr("gradient_tooltip_range", min=min_val, max=max_val))
+                        # Adicionar uma nota se o valor real está além do máximo
+                        if card.ivl > max_val:
+                            tooltip_parts.append(tr("gradient_normalized_value", real=card.ivl))
+                    else:
+                        # Se não normalizado, mostrar range dinâmico
+                        actual_max = max(max_val, card.ivl)
+                        tooltip_parts.append(tr("gradient_tooltip_range", min=min_val, max=actual_max))
+                        if card.ivl > max_val:
+                            tooltip_parts.append(tr("gradient_dynamic_scale"))
+                elif current_gradient_field == "reps":
+                    tooltip_parts.append(tr("gradient_tooltip_value", value=card.reps))
+                    tooltip_parts.append(tr("gradient_tooltip_range", min=config.get("gradient_reps_min", 0), max=config.get("gradient_reps_max", 25)))
+                elif current_gradient_field == "lapses":
+                    tooltip_parts.append(tr("gradient_tooltip_value", value=card.lapses))
+                    tooltip_parts.append(tr("gradient_tooltip_range", min=config.get("gradient_lapses_min", 0), max=config.get("gradient_lapses_max", 10)))
+                elif current_gradient_field == "due" and card.queue == 2:
+                    today = mw.col.sched.today
+                    days_until_due = max(0, card.due - today)
+                    tooltip_parts.append(tr("gradient_tooltip_value", value=days_until_due))
+                    tooltip_parts.append(tr("gradient_tooltip_range", min=config.get("gradient_due_min", 0), max=config.get("gradient_due_max", 90)))
+                    
         title_tooltip = "&#10;".join(tooltip_parts)
 
         border_color_from_config = config.get('tile_border_color') # Padrão Cinza
@@ -363,25 +488,74 @@ def _render_memorymosaic_grid_html(overview_deck_name: str | None = None) -> str
 </div>
 '''
 
-    # Contagem de cores para o sumário (agora antes da grade)
-    color_summary_items_html_parts = []
-    sorted_colors = sorted(
-        color_counts.items(), 
-        key=lambda item: color_to_label_map.get(item[0], "ŻŻŻ " + item[0]).lower()
-    )
-    for color_hex, count in sorted_colors:
-        label = color_to_label_map.get(color_hex, f"Cor Desconhecida ({color_hex})")
-        color_swatch_style = f"display: inline-block; width: 12px; height: 12px; background-color: {color_hex}; border: 1px solid #888; margin-right: 5px; vertical-align: middle;"
-        color_summary_items_html_parts.append(f'<span style="display: inline-flex; align-items: center; white-space: nowrap;"><span style="{color_swatch_style}"></span>{label}: {count}</span>')
-    
-    color_summary_items_html = ' ' .join(color_summary_items_html_parts) # Espaço entre itens
+    # Sumário de cores para o modo categórico
+    color_summary_container_html = ""
+    if current_view_mode == "categorical":
+        # Contagem de cores para o sumário (agora antes da grade)
+        color_summary_items_html_parts = []
+        sorted_colors = sorted(
+            color_counts.items(), 
+            key=lambda item: color_to_label_map.get(item[0], "ŻŻŻ " + item[0]).lower()
+        )
+        for color_hex, count in sorted_colors:
+            label = color_to_label_map.get(color_hex, f"Cor Desconhecida ({color_hex})")
+            color_swatch_style = f"display: inline-block; width: 12px; height: 12px; background-color: {color_hex}; border: 1px solid #888; margin-right: 5px; vertical-align: middle;"
+            color_summary_items_html_parts.append(f'<span style="display: inline-flex; align-items: center; white-space: nowrap;"><span style="{color_swatch_style}"></span>{label}: {count}</span>')
+        
+        color_summary_items_html = ' ' .join(color_summary_items_html_parts) # Espaço entre itens
 
-    color_summary_container_html = f'''
+        color_summary_container_html = f'''
 <div id="memorymosaic-color-summary-container" style="max-width: {grid_max_width_px}px; margin-left: auto; margin-right: auto; margin-bottom: 5px; padding: 8px 0; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 10px 15px; font-size: 0.9em;">
     <p style="font-weight: bold; margin: 0; white-space: nowrap;">{tr("summary_title")}:</p>
     {color_summary_items_html}
 </div>
 '''
+    # Para modo gradiente, mostrar a legenda do gradiente
+    elif current_view_mode == "gradient":
+        # Obtém os valores min/max para o campo atual
+        min_val = 0
+        max_val = 100
+        gradient_field_label = ""
+        
+        if current_gradient_field == "factor":
+            min_val = config.get("gradient_factor_min", 1500)
+            max_val = config.get("gradient_factor_max", 2900)
+            gradient_field_label = tr("gradient_field_factor")
+        elif current_gradient_field == "ivl":
+            min_val = config.get("gradient_ivl_min", 0)
+            max_val = config.get("gradient_ivl_max", 365)
+            gradient_field_label = tr("gradient_field_ivl")
+        elif current_gradient_field == "reps":
+            min_val = config.get("gradient_reps_min", 0)
+            max_val = config.get("gradient_reps_max", 25)
+            gradient_field_label = tr("gradient_field_reps")
+        elif current_gradient_field == "lapses":
+            min_val = config.get("gradient_lapses_min", 0)
+            max_val = config.get("gradient_lapses_max", 10)
+            gradient_field_label = tr("gradient_field_lapses")
+        elif current_gradient_field == "due":
+            min_val = config.get("gradient_due_min", 0)
+            max_val = config.get("gradient_due_max", 90)
+            gradient_field_label = tr("gradient_field_due")
+            
+        # Cores do gradiente
+        start_color = config.get("gradient_color_start", "#FFEB3B")
+        mid_color = config.get("gradient_color_mid", "#4CAF50")
+        end_color = config.get("gradient_color_end", "#1565C0")
+        
+        # Criar uma legenda de gradiente
+        gradient_legend_html = f'''
+<div style="max-width: {grid_max_width_px}px; margin-left: auto; margin-right: auto; margin-bottom: 5px; padding: 8px 0; display: flex; flex-direction: column; align-items: center; font-size: 0.9em;">
+    <p style="font-weight: bold; margin: 0 0 5px 0;">{tr("summary_title")}: {gradient_field_label} ({min_val} - {max_val})</p>
+    <div style="width: 80%; max-width: 400px; height: 20px; background: linear-gradient(to right, {start_color}, {mid_color}, {end_color}); border-radius: 3px; margin-bottom: 3px;"></div>
+    <div style="display: flex; justify-content: space-between; width: 80%; max-width: 400px;">
+        <span>{min_val}</span>
+        <span>{(min_val + max_val) // 2}</span>
+        <span>{max_val}</span>
+    </div>
+</div>
+'''
+        color_summary_container_html = gradient_legend_html
 
     grid_html_content = f'<div id="memorymosaic-grid-container" style="{grid_container_style}">{all_tiles_html}</div>'
 
@@ -391,6 +565,8 @@ def _render_memorymosaic_grid_html(overview_deck_name: str | None = None) -> str
     document.body.style.cursor = 'default';
 
     let currentSortOrder = '{current_sort_order_key}'; // Injetado pelo Python
+    let currentViewMode = '{current_view_mode}'; // Modo de visualização atual
+    let currentGradientField = '{current_gradient_field}'; // Campo de gradiente atual
 
     function onMemoryMosaicTileClick(cid) {{
         pycmd("memorymosaic_open_card:" + cid);
@@ -400,6 +576,23 @@ def _render_memorymosaic_grid_html(overview_deck_name: str | None = None) -> str
         document.body.style.cursor = 'wait'; // Muda o cursor para ampulheta
         pycmd("memorymosaic_sort_change:" + newSortOrder);
     }}
+    
+    function onMemoryMosaicViewModeChanged(newViewMode) {{
+        document.body.style.cursor = 'wait';
+        
+        // Atualiza a exibição do seletor de campo de gradiente
+        const gradientFieldContainer = document.getElementById('memorymosaic-gradient-field-container');
+        if (gradientFieldContainer) {{
+            gradientFieldContainer.style.display = (newViewMode === 'gradient') ? 'block' : 'none';
+        }}
+        
+        pycmd("memorymosaic_view_mode_change:" + newViewMode);
+    }}
+    
+    function onMemoryMosaicGradientFieldChanged(newField) {{
+        document.body.style.cursor = 'wait';
+        pycmd("memorymosaic_gradient_field_change:" + newField);
+    }}
 
     function setMemoryMosaicSortOrderDropdown(sortOrderToSet) {{
         const selectElement = document.getElementById('memorymosaic-sort-order');
@@ -408,15 +601,39 @@ def _render_memorymosaic_grid_html(overview_deck_name: str | None = None) -> str
         }}
         currentSortOrder = sortOrderToSet;
     }}
+    
+    function setMemoryMosaicViewModeDropdown(viewModeToSet) {{
+        const selectElement = document.getElementById('memorymosaic-view-mode');
+        if (selectElement) {{
+            selectElement.value = viewModeToSet;
+        }}
+        currentViewMode = viewModeToSet;
+        
+        // Atualiza a exibição do seletor de campo de gradiente
+        const gradientFieldContainer = document.getElementById('memorymosaic-gradient-field-container');
+        if (gradientFieldContainer) {{
+            gradientFieldContainer.style.display = (viewModeToSet === 'gradient') ? 'block' : 'none';
+        }}
+    }}
+    
+    function setMemoryMosaicGradientFieldDropdown(fieldToSet) {{
+        const selectElement = document.getElementById('memorymosaic-gradient-field');
+        if (selectElement) {{
+            selectElement.value = fieldToSet;
+        }}
+        currentGradientField = fieldToSet;
+    }}
 
-    // Inicializa o dropdown com a ordenação correta ao carregar a grade
+    // Inicializa os dropdowns com os valores corretos ao carregar a grade
     (function() {{
         setMemoryMosaicSortOrderDropdown(currentSortOrder);
+        setMemoryMosaicViewModeDropdown(currentViewMode);
+        setMemoryMosaicGradientFieldDropdown(currentGradientField);
     }})();
 </script>
 """
 
-    return title_and_controls_html + color_summary_container_html + grid_html_content + filter_info_footer_html + script_html
+    return spacing_html + title_and_controls_html + color_summary_container_html + grid_html_content + filter_info_footer_html + script_html
 
 def _is_collection_usable() -> bool:
     """Verifica se a coleção está em um estado utilizável."""
@@ -443,6 +660,109 @@ def _is_collection_usable() -> bool:
         
     return True
 
+def _hex_to_rgb(hex_color: str) -> tuple[int, int, int]:
+    """Converte cor hexadecimal para RGB."""
+    hex_color = hex_color.lstrip('#')
+    return tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
+
+def _rgb_to_hex(rgb: tuple[int, int, int]) -> str:
+    """Converte cor RGB para hexadecimal."""
+    return '#{:02x}{:02x}{:02x}'.format(*rgb)
+
+def _get_gradient_color(value: float, min_val: float, max_val: float, config: dict) -> str:
+    """Calcula a cor do gradiente para um valor entre o mínimo e o máximo."""
+    # Prevenir divisão por zero
+    if min_val == max_val:
+        return config.get("gradient_color_mid", "#4CAF50")
+        
+    # Normalizar o valor para [0, 1]
+    normalized = max(0, min(1, (value - min_val) / (max_val - min_val)))
+    
+    # Obter cores do gradiente do config
+    start_color = config.get("gradient_color_start", "#FFEB3B")  # Amarelo
+    mid_color = config.get("gradient_color_mid", "#4CAF50")      # Verde
+    end_color = config.get("gradient_color_end", "#1565C0")      # Azul
+    
+    # Converter para RGB para interpolação
+    start_rgb = _hex_to_rgb(start_color)
+    mid_rgb = _hex_to_rgb(mid_color)
+    end_rgb = _hex_to_rgb(end_color)
+    
+    # Interpolação baseada na posição normalizada
+    if normalized <= 0.5:
+        # Entre start e mid (0.0 a 0.5)
+        normalized_adjusted = normalized * 2  # Ajusta para range 0-1
+        r = int(start_rgb[0] + (mid_rgb[0] - start_rgb[0]) * normalized_adjusted)
+        g = int(start_rgb[1] + (mid_rgb[1] - start_rgb[1]) * normalized_adjusted)
+        b = int(start_rgb[2] + (mid_rgb[2] - start_rgb[2]) * normalized_adjusted)
+    else:
+        # Entre mid e end (0.5 a 1.0)
+        normalized_adjusted = (normalized - 0.5) * 2  # Ajusta para range 0-1
+        r = int(mid_rgb[0] + (end_rgb[0] - mid_rgb[0]) * normalized_adjusted)
+        g = int(mid_rgb[1] + (end_rgb[1] - mid_rgb[1]) * normalized_adjusted)
+        b = int(mid_rgb[2] + (end_rgb[2] - mid_rgb[2]) * normalized_adjusted)
+    
+    # Converter de volta para hex
+    return _rgb_to_hex((r, g, b))
+
+def _get_gradient_tile_color(card: Card | None, field: str, config: dict) -> str:
+    """Determina a cor do tile com base no gradiente do campo selecionado."""
+    if not card:
+        return config.get("color_default_bg", "#CCCCCC")
+        
+    # Cartões suspensos/enterrados sempre têm a mesma cor
+    if card.queue in [-1, -2, -3]:
+        return config.get("color_suspended_buried", "#222222")
+        
+    # Obter o valor de acordo com o campo
+    value = None
+    min_val = 0
+    max_val = 100  # Valores padrão
+    
+    if field == "factor":
+        value = card.factor
+        min_val = config.get("gradient_factor_min", 1500)
+        max_val = config.get("gradient_factor_max", 2900)
+    elif field == "ivl":
+        value = card.ivl
+        min_val = config.get("gradient_ivl_min", 0)
+        max_val = config.get("gradient_ivl_max", 365)
+        
+        # Verificar se devemos normalizar o gradiente para ivl
+        normalize_ivl = config.get("gradient_normalize_ivl", True)
+        if not normalize_ivl and value > max_val:
+            # Se não normalizar, ajustar o max_val para o valor real do cartão
+            # Isso fará com que o gradiente se expanda dinamicamente
+            max_val = value
+    elif field == "reps":
+        value = card.reps
+        min_val = config.get("gradient_reps_min", 0)
+        max_val = config.get("gradient_reps_max", 25)
+    elif field == "lapses":
+        value = card.lapses
+        min_val = config.get("gradient_lapses_min", 0)
+        max_val = config.get("gradient_lapses_max", 10)
+    elif field == "due":
+        # Calcular dias até o vencimento
+        if card.queue == 2:  # Cartão em revisão
+            today = mw.col.sched.today
+            days_until_due = card.due - today
+            value = max(0, days_until_due)  # Não negativo
+            min_val = config.get("gradient_due_min", 0)
+            max_val = config.get("gradient_due_max", 90)
+        else:
+            # Para cartões que não estão em revisão, usar verde médio
+            return config.get("gradient_color_mid", "#4CAF50")
+    else:
+        # Campo não reconhecido, usar cor padrão
+        return config.get("color_default_bg", "#CCCCCC")
+    
+    if value is None:
+        return config.get("color_default_bg", "#CCCCCC")
+        
+    # Calcular a cor do gradiente
+    return _get_gradient_color(value, min_val, max_val, config)
+
 def on_sync_will_start():
     """Handler para quando a sincronização vai começar."""
     global _is_syncing
@@ -458,10 +778,9 @@ def on_sync_did_finish():
         
     # Pequeno delay para garantir que a coleção esteja estável
     try:
-        mw.progress.timer(
+        mw.progress.single_shot(
             1000,  # Aumentado para 1 segundo para dar mais tempo após sincronização
-            lambda: request_refresh_if_memorymosaic_visible() if _is_collection_usable() else None,
-            False
+            lambda: request_refresh_if_memorymosaic_visible() if _is_collection_usable() else None
         )
     except Exception:
         pass
@@ -605,10 +924,49 @@ def handle_memorymosaic_pycmd(handled: tuple[bool, Any], message: str, context: 
             if new_sort_order in valid_sort_orders:
                 _session_sort_order_override = new_sort_order
                 try:
-                    mw.progress.timer(
+                    mw.progress.single_shot(
                         100,
-                        lambda: request_refresh_if_memorymosaic_visible() if _is_collection_usable() else None,
-                        False
+                        lambda: request_refresh_if_memorymosaic_visible() if _is_collection_usable() else None
+                    )
+                except Exception:
+                    pass
+            return (True, None)
+        except Exception:
+            return (True, None)
+    elif message.startswith("memorymosaic_view_mode_change:"):
+        try:
+            if not _is_collection_usable():
+                return (True, None)
+                
+            global _session_view_mode_override
+            new_view_mode = message.split(":")[1]
+            valid_view_modes = ["categorical", "gradient"]
+            if new_view_mode in valid_view_modes:
+                _session_view_mode_override = new_view_mode
+                try:
+                    mw.progress.single_shot(
+                        100,
+                        lambda: request_refresh_if_memorymosaic_visible() if _is_collection_usable() else None
+                    )
+                except Exception:
+                    pass
+            return (True, None)
+        except Exception:
+            return (True, None)
+    elif message.startswith("memorymosaic_gradient_field_change:"):
+        try:
+            if not _is_collection_usable():
+                return (True, None)
+                
+            global _session_gradient_field_override
+            new_gradient_field = message.split(":")[1]
+            valid_gradient_fields = ["factor", "ivl", "reps", "lapses", "due"]
+            if new_gradient_field in valid_gradient_fields:
+                _session_gradient_field_override = new_gradient_field
+                try:
+                    mw.progress.single_shot(
+                        100,
+                        lambda: request_refresh_if_memorymosaic_visible() if _is_collection_usable() else None
                     )
                 except Exception:
                     pass

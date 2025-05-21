@@ -16,5 +16,21 @@
     "grid_max_width_px": 800,
     "grid_max_height_px": 1000,
     "grid_padding_px": 5,
-    "memorymosaic_default_sort_order": "id_asc"
+    "memorymosaic_default_sort_order": "id_asc",
+    "memorymosaic_default_view_mode": "categorical",
+    "memorymosaic_default_gradient_field": "ivl",
+    "gradient_normalize_ivl": false,
+    "gradient_factor_min": 1500,
+    "gradient_factor_max": 2900,
+    "gradient_ivl_min": 0,
+    "gradient_ivl_max": 365,
+    "gradient_reps_min": 0,
+    "gradient_reps_max": 25,
+    "gradient_lapses_min": 0,
+    "gradient_lapses_max": 10,
+    "gradient_due_min": 0,
+    "gradient_due_max": 90,
+    "gradient_color_start": "#FFEB3B",
+    "gradient_color_mid": "#4CAF50",
+    "gradient_color_end": "#1565C0"
 } 

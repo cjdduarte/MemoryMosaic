@@ -61,6 +61,21 @@ translations = {
         "sort_by_interval_desc": "Intervalo (Decresc.)",
         "sort_by_due_date": "Vencimento",
         
+        # Visualização - Novos
+        "view_mode": "Modo de Visualização",
+        "view_categorical": "Categorias",
+        "view_gradient": "Gradiente",
+        "gradient_field": "Campo para Gradiente",
+        "gradient_field_factor": "Facilidade",
+        "gradient_field_ivl": "Intervalo/Maturidade",
+        "gradient_field_reps": "Repetições",
+        "gradient_field_lapses": "Lapsos",
+        "gradient_field_due": "Tempo até Vencimento",
+        "gradient_tooltip_value": "Valor: {value}",
+        "gradient_tooltip_range": "Faixa do Gradiente: {min} a {max}",
+        "gradient_normalized_value": "Valor normalizado (real: {real})",
+        "gradient_dynamic_scale": "Usando escala dinâmica (não normalizada)",
+        
         # Mensagens
         "loading_mosaic": "Carregando Memory Mosaic...",
         "no_cards": "Nenhum cartão encontrado para exibir.",
@@ -114,6 +129,21 @@ translations = {
         "sort_by_interval_asc": "Interval (Asc.)",
         "sort_by_interval_desc": "Interval (Desc.)",
         "sort_by_due_date": "Due Date",
+        
+        # Visualization - New
+        "view_mode": "View Mode",
+        "view_categorical": "Categories",
+        "view_gradient": "Gradient",
+        "gradient_field": "Gradient Field",
+        "gradient_field_factor": "Ease Factor",
+        "gradient_field_ivl": "Interval/Maturity",
+        "gradient_field_reps": "Repetitions",
+        "gradient_field_lapses": "Lapses",
+        "gradient_field_due": "Time Until Due",
+        "gradient_tooltip_value": "Value: {value}",
+        "gradient_tooltip_range": "Gradient Range: {min} to {max}",
+        "gradient_normalized_value": "Normalized value (actual: {real})",
+        "gradient_dynamic_scale": "Using dynamic scale (non-normalized)",
         
         # Messages
         "loading_mosaic": "Loading Memory Mosaic...",

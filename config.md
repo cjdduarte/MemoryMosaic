@@ -82,6 +82,45 @@ Após modificar o `config.json` diretamente, pode ser necessário reiniciar o An
         *   `"due_asc"`: Ordena por data de vencimento (mais próximos primeiro).
     *   Padrão se não especificado: `"id_asc"`. 
 
+## Opções de Visualização em Gradiente
+
+*   `"memorymosaic_default_view_mode"`: Define o modo de visualização padrão.
+    *   Opções válidas:
+        *   `"categorical"` (Padrão): Utiliza cores categóricas para os diferentes status de cartões.
+        *   `"gradient"`: Utiliza um gradiente de cores com base em uma propriedade selecionada.
+    *   Padrão: `"categorical"`
+
+*   `"memorymosaic_default_gradient_field"`: Define qual campo será usado para colorir o gradiente.
+    *   Opções válidas:
+        *   `"factor"`: Fator de facilidade (ease factor) do cartão.
+        *   `"ivl"` (Padrão): Intervalo do cartão (maturidade).
+        *   `"reps"`: Número de repetições do cartão.
+        *   `"lapses"`: Número de lapsos (falhas) do cartão.
+        *   `"due"`: Tempo até o vencimento.
+    *   Padrão: `"ivl"`
+
+*   `"gradient_normalize_ivl"`: Define se o gradiente de intervalos (ivl) deve ser normalizado até o valor máximo definido ou usar os valores reais dos cartões.
+    *   Opções válidas:
+        *   `true` (Padrão): Normaliza o gradiente, limitando a escala de cores ao intervalo entre `gradient_ivl_min` e `gradient_ivl_max` (ex: 0-365).
+        *   `false`: Não normaliza, expande o gradiente até o maior valor real presente na coleção. Útil para visualizar diferenças entre cartões com intervalos muito longos.
+    *   Padrão: `true`
+    *   Observação: Este parâmetro afeta apenas o campo "ivl" (intervalo).
+
+*   Valores mínimos e máximos para cada campo de gradiente:
+    *   `"gradient_factor_min"` e `"gradient_factor_max"`: Faixa para o fator de facilidade (1500-2900).
+    *   `"gradient_ivl_min"` e `"gradient_ivl_max"`: Faixa para intervalos em dias (0-365).
+    *   `"gradient_reps_min"` e `"gradient_reps_max"`: Faixa para número de repetições (0-25).
+    *   `"gradient_lapses_min"` e `"gradient_lapses_max"`: Faixa para número de lapsos (0-10).
+    *   `"gradient_due_min"` e `"gradient_due_max"`: Faixa para dias até o vencimento (0-90).
+
+*   Cores do gradiente:
+    *   `"gradient_color_start"`: Cor inicial do gradiente (para o valor mínimo).
+        *   Padrão: `"#FFEB3B"` (Amarelo)
+    *   `"gradient_color_mid"`: Cor intermediária do gradiente.
+        *   Padrão: `"#4CAF50"` (Verde)
+    *   `"gradient_color_end"`: Cor final do gradiente (para o valor máximo).
+        *   Padrão: `"#1565C0"` (Azul)
+
 ---
 
 ## English
@@ -163,3 +202,42 @@ After modifying the `config.json` directly, you may need to restart Anki for the
         *   `"ivl_desc"`: Sorts by descending interval (larger intervals first).
         *   `"due_asc"`: Sorts by due date (closest first).
     *   Default if not specified: `"id_asc"`. 
+
+## Gradient Visualization Options
+
+*   `"memorymosaic_default_view_mode"`: Defines the default visualization mode.
+    *   Valid options:
+        *   `"categorical"` (Default): Uses categorical colors for different card statuses.
+        *   `"gradient"`: Uses a color gradient based on a selected property.
+    *   Default: `"categorical"`
+
+*   `"memorymosaic_default_gradient_field"`: Defines which field will be used to color the gradient.
+    *   Valid options:
+        *   `"factor"`: Card's ease factor.
+        *   `"ivl"` (Default): Card's interval (maturity).
+        *   `"reps"`: Number of repetitions for the card.
+        *   `"lapses"`: Number of lapses (failures) for the card.
+        *   `"due"`: Time until due.
+    *   Default: `"ivl"`
+
+*   `"gradient_normalize_ivl"`: Determines if the interval gradient (ivl) should be normalized to the defined maximum value or use the real card values.
+    *   Valid options:
+        *   `true` (Default): Normalizes the gradient, limiting the color scale to the range between `gradient_ivl_min` and `gradient_ivl_max` (e.g., 0-365).
+        *   `false`: Does not normalize, expands the gradient to the highest actual value present in the collection. Useful for visualizing differences between cards with very long intervals.
+    *   Default: `true`
+    *   Note: This parameter only affects the "ivl" (interval) field.
+
+*   Minimum and maximum values for each gradient field:
+    *   `"gradient_factor_min"` and `"gradient_factor_max"`: Range for ease factor (1500-2900).
+    *   `"gradient_ivl_min"` and `"gradient_ivl_max"`: Range for intervals in days (0-365).
+    *   `"gradient_reps_min"` and `"gradient_reps_max"`: Range for number of repetitions (0-25).
+    *   `"gradient_lapses_min"` and `"gradient_lapses_max"`: Range for number of lapses (0-10).
+    *   `"gradient_due_min"` and `"gradient_due_max"`: Range for days until due (0-90).
+
+*   Gradient colors:
+    *   `"gradient_color_start"`: Starting color of the gradient (for the minimum value).
+        *   Default: `"#FFEB3B"` (Yellow)
+    *   `"gradient_color_mid"`: Middle color of the gradient.
+        *   Default: `"#4CAF50"` (Green)
+    *   `"gradient_color_end"`: End color of the gradient (for the maximum value).
+        *   Default: `"#1565C0"` (Blue) 
