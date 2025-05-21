@@ -86,17 +86,6 @@ def _get_tile_bg_color(card: Card | None, config: dict) -> str:
             
     return config.get("color_default_bg")
 
-def _format_last_review_date(cid: int) -> str:
-    """Busca e formata a data da última revisão para um cartão."""
-    if not mw or not mw.col or not mw.col.db:
-        return "N/A"
-        
-    last_rev_timestamp_ms = mw.col.db.scalar("SELECT max(id) FROM revlog WHERE cid = ?", cid)
-    if last_rev_timestamp_ms:
-        last_rev_dt = datetime.fromtimestamp(last_rev_timestamp_ms / 1000)
-        return last_rev_dt.strftime("%Y-%m-%d %H:%M")
-    return "N/A"
-
 def _open_card_in_browser(cid: int) -> None:
     """Abre o cartão com o cid especificado no Navegador do Anki."""
     try:
@@ -220,6 +209,20 @@ def _render_memorymosaic_grid_html(overview_deck_name: str | None = None) -> str
             return "<p>Aguardando coleção do Anki...</p>"
 
     card_count = len(cids) 
+
+    # >>> PASSO 2: Otimizar busca da última data de revisão <<<
+    last_review_timestamps_map = {}
+    if cids:
+        # Busca todos os timestamps de uma vez
+        # O resultado é uma lista de tuplas (cid, timestamp_ms)
+        query_results = mw.col.db.all(
+            f"SELECT cid, MAX(id) FROM revlog WHERE cid IN ({ ', '.join(map(str, cids)) }) GROUP BY cid"
+        )
+        if query_results:
+            for cid_db, timestamp_ms in query_results:
+                if timestamp_ms:
+                    last_review_timestamps_map[cid_db] = timestamp_ms
+    # >>> FIM PASSO 2 <<<
 
     title_html_no_cards = f'<h4 style="text-align: center; margin-bottom: 10px;">{tr("addon_title")}:</h4>' # Título para quando não há cards
     
@@ -376,6 +379,14 @@ def _render_memorymosaic_grid_html(overview_deck_name: str | None = None) -> str
             # _get_gradient_color já trata min_val == max_val retornando a cor média
     # >>> FIM DAS NOVAS ADIÇÕES PARA IVL DINÂMICO <<<
 
+    # >>> PASSO 3: Otimizar leitura de config para tooltip IVL (modo gradiente, campo ivl, normalização desligada) <<<
+    tooltip_config_min_ivl_for_gradient_tooltip: int | None = None
+    tooltip_config_max_ivl_for_gradient_tooltip: int | None = None
+    if current_view_mode == "gradient" and current_gradient_field == "ivl" and not (normalize_ivl_active and actual_min_ivl_for_norm is not None and actual_max_ivl_for_norm is not None):
+        tooltip_config_min_ivl_for_gradient_tooltip = config.get("gradient_ivl_min", 0)
+        tooltip_config_max_ivl_for_gradient_tooltip = config.get("gradient_ivl_max", 365)
+    # >>> FIM PASSO 3 <<<
+
     for cid in cids: 
         card = mw.col.get_card(cid)
         
@@ -430,7 +441,15 @@ def _render_memorymosaic_grid_html(overview_deck_name: str | None = None) -> str
         if card:
             deck_name = mw.col.decks.name(card.did)
             tooltip_parts.append(tr("tooltip_deck", deck=deck_name))
-            last_review_str = _format_last_review_date(cid)
+            
+            # last_review_str = _format_last_review_date(cid) # <--- REMOVIDO
+            last_rev_timestamp_ms = last_review_timestamps_map.get(cid)
+            if last_rev_timestamp_ms:
+                last_rev_dt = datetime.fromtimestamp(last_rev_timestamp_ms / 1000)
+                last_review_str = last_rev_dt.strftime("%Y-%m-%d %H:%M")
+            else:
+                last_review_str = "N/A"
+
             if last_review_str == "N/A":
                 tooltip_parts.append(tr("tooltip_never_reviewed"))
             else:
@@ -455,12 +474,10 @@ def _render_memorymosaic_grid_html(overview_deck_name: str | None = None) -> str
                         # Não é necessário (valor real: X) aqui, pois a cor e a faixa refletem o conjunto de dados
                     else:
                         # Usar a faixa do config para o tooltip
-                        config_min_ivl = config.get("gradient_ivl_min", 0)
-                        config_max_ivl = config.get("gradient_ivl_max", 365)
-                        tooltip_parts.append(tr("gradient_tooltip_range", min=config_min_ivl, max=config_max_ivl))
+                        tooltip_parts.append(tr("gradient_tooltip_range", min=tooltip_config_min_ivl_for_gradient_tooltip, max=tooltip_config_max_ivl_for_gradient_tooltip))
                         # Se o valor real do cartão estiver fora da faixa de config (e não estamos normalizando dinamicamente),
                         # adicionar uma nota com o valor real.
-                        if card.ivl < config_min_ivl or card.ivl > config_max_ivl:
+                        if card.ivl < tooltip_config_min_ivl_for_gradient_tooltip or card.ivl > tooltip_config_max_ivl_for_gradient_tooltip:
                             tooltip_parts.append(tr("gradient_normalized_value", real=card.ivl))
                             
                 elif current_gradient_field == "lapses":
