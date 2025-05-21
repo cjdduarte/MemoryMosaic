@@ -94,7 +94,6 @@ Após modificar o `config.json` diretamente, pode ser necessário reiniciar o An
     *   Opções válidas:
         *   `"factor"`: Fator de facilidade (ease factor) do cartão.
         *   `"ivl"` (Padrão): Intervalo do cartão (maturidade).
-        *   `"reps"`: Número de repetições do cartão.
         *   `"lapses"`: Número de lapsos (falhas) do cartão.
         *   `"due"`: Tempo até o vencimento.
     *   Padrão: `"ivl"`
@@ -115,10 +114,6 @@ Após modificar o `config.json` diretamente, pode ser necessário reiniciar o An
     *   `"gradient_ivl_order"`: Define a direção do gradiente para o intervalo.
         *   `"asc"` (Padrão): Maiores intervalos (mais maduro) tendem a `gradient_color_end`.
         *   `"desc"`: Menores intervalos tendem a `gradient_color_end`.
-    *   `"gradient_reps_min"` e `"gradient_reps_max"`: Faixa para número de repetições (0-25).
-    *   `"gradient_reps_order"`: Define a direção do gradiente para repetições.
-        *   `"asc"` (Padrão): Mais repetições tendem a `gradient_color_end`.
-        *   `"desc"`: Menos repetições tendem a `gradient_color_end`.
     *   `"gradient_lapses_min"` e `"gradient_lapses_max"`: Faixa para número de lapsos (0-10).
     *   `"gradient_lapses_order"`: Define a direção do gradiente para lapsos.
         *   `"asc"`: Mais lapsos (pior) tendem a `gradient_color_end`.
@@ -230,7 +225,6 @@ After modifying the `config.json` directly, you may need to restart Anki for the
     *   Valid options:
         *   `"factor"`: Card's ease factor.
         *   `"ivl"` (Default): Card's interval (maturity).
-        *   `"reps"`: Number of repetitions for the card.
         *   `"lapses"`: Number of lapses (failures) for the card.
         *   `"due"`: Time until due.
     *   Default: `"ivl"`
@@ -251,10 +245,6 @@ After modifying the `config.json` directly, you may need to restart Anki for the
     *   `"gradient_ivl_order"`: Defines the gradient direction for interval.
         *   `"asc"` (Default): Longer intervals (more mature) tend towards `gradient_color_end`.
         *   `"desc"`: Shorter intervals tend towards `gradient_color_end`.
-    *   `"gradient_reps_min"` and `"gradient_reps_max"`: Range for number of repetitions (0-25).
-    *   `"gradient_reps_order"`: Defines the gradient direction for repetitions.
-        *   `"asc"` (Default): More repetitions tend towards `gradient_color_end`.
-        *   `"desc"`: Fewer repetitions tend towards `gradient_color_end`.
     *   `"gradient_lapses_min"` and `"gradient_lapses_max"`: Range for number of lapses (0-10).
     *   `"gradient_lapses_order"`: Defines the gradient direction for lapses.
         *   `"asc"`: More lapses (worse) tend towards `gradient_color_end`.
@@ -267,4 +257,7 @@ After modifying the `config.json` directly, you may need to restart Anki for the
 *   Gradient colors:
     *   `"gradient_color_start"`: Starting color of the gradient (for the minimum value).
         *   Default: `"#FFEB3B"` (Yellow)
-    *   `"gradient_color_mid"`
+    *   `"gradient_color_mid"`: Middle color of the gradient.
+        *   Default: `"#4CAF50"` (Green)
+    *   `"gradient_color_end"`: End color of the gradient (for the maximum value).
+        *   Default: `"#1565C0"` (Blue)

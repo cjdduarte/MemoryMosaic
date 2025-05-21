@@ -169,7 +169,7 @@ def _render_memorymosaic_grid_html(overview_deck_name: str | None = None) -> str
         current_gradient_field = _session_gradient_field_override
     else:
         configured_gradient_field = config.get("memorymosaic_default_gradient_field")
-        valid_gradient_fields = ["factor", "ivl", "reps", "lapses", "due"]
+        valid_gradient_fields = ["factor", "ivl", "lapses", "due"]
         if configured_gradient_field in valid_gradient_fields:
             current_gradient_field = configured_gradient_field
         else:
@@ -273,7 +273,6 @@ def _render_memorymosaic_grid_html(overview_deck_name: str | None = None) -> str
         <select id="memorymosaic-gradient-field" onchange="onMemoryMosaicGradientFieldChanged(this.value)" style="padding: 5px; border-radius: 4px; border: 1px solid #ccc;">
             <option value="factor">{tr("gradient_field_factor")}</option>
             <option value="ivl">{tr("gradient_field_ivl")}</option>
-            <option value="reps">{tr("gradient_field_reps")}</option>
             <option value="lapses">{tr("gradient_field_lapses")}</option>
             <option value="due">{tr("gradient_field_due")}</option>
         </select>
@@ -398,14 +397,12 @@ def _render_memorymosaic_grid_html(overview_deck_name: str | None = None) -> str
                 bg_color = _get_gradient_tile_color(card, current_gradient_field, config)
             
             # Coletar estatísticas para o modo gradiente
-            if card and current_gradient_field in ["factor", "ivl", "reps", "lapses", "due"]:
+            if card and current_gradient_field in ["factor", "ivl", "lapses", "due"]:
                 field_value = 0
                 if current_gradient_field == "factor":
                     field_value = card.factor
                 elif current_gradient_field == "ivl":
                     field_value = card.ivl
-                elif current_gradient_field == "reps":
-                    field_value = card.reps
                 elif current_gradient_field == "lapses":
                     field_value = card.lapses
                 elif current_gradient_field == "due" and card.queue == 2:
@@ -468,9 +465,6 @@ def _render_memorymosaic_grid_html(overview_deck_name: str | None = None) -> str
                         if card.ivl < config_min_ivl or card.ivl > config_max_ivl:
                             tooltip_parts.append(tr("gradient_normalized_value", real=card.ivl))
                             
-                elif current_gradient_field == "reps":
-                    tooltip_parts.append(tr("gradient_tooltip_value", value=card.reps))
-                    tooltip_parts.append(tr("gradient_tooltip_range", min=config.get("gradient_reps_min", 0), max=config.get("gradient_reps_max", 25)))
                 elif current_gradient_field == "lapses":
                     tooltip_parts.append(tr("gradient_tooltip_value", value=card.lapses))
                     tooltip_parts.append(tr("gradient_tooltip_range", min=config.get("gradient_lapses_min", 0), max=config.get("gradient_lapses_max", 10)))
@@ -584,10 +578,6 @@ def _render_memorymosaic_grid_html(overview_deck_name: str | None = None) -> str
             else:
                 min_val = config.get("gradient_ivl_min", 0)
                 max_val = config.get("gradient_ivl_max", 365)
-        elif current_gradient_field == "reps":
-            min_val = config.get("gradient_reps_min", 0)
-            max_val = config.get("gradient_reps_max", 25)
-            gradient_field_label = tr("gradient_field_reps")
         elif current_gradient_field == "lapses":
             min_val = config.get("gradient_lapses_min", 0)
             max_val = config.get("gradient_lapses_max", 10)
@@ -809,10 +799,6 @@ def _get_gradient_tile_color(card: Card | None, field: str, config: dict, ivl_mi
         else: # Fallback se overrides não forem passados (não deveria acontecer com a nova lógica)
             min_val = config.get("gradient_ivl_min", 0)
             max_val = config.get("gradient_ivl_max", 365)
-    elif field == "reps":
-        value = card.reps
-        min_val = config.get("gradient_reps_min", 0)
-        max_val = config.get("gradient_reps_max", 25)
     elif field == "lapses":
         value = card.lapses
         min_val = config.get("gradient_lapses_min", 0)
@@ -1048,7 +1034,7 @@ def handle_memorymosaic_pycmd(handled: tuple[bool, Any], message: str, context: 
                 
             global _session_gradient_field_override
             new_gradient_field = message.split(":")[1]
-            valid_gradient_fields = ["factor", "ivl", "reps", "lapses", "due"]
+            valid_gradient_fields = ["factor", "ivl", "lapses", "due"]
             if new_gradient_field in valid_gradient_fields:
                 _session_gradient_field_override = new_gradient_field
                 try:
