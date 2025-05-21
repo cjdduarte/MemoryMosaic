@@ -47,18 +47,14 @@ def _get_addon_config() -> dict:
     _memorymosaic_cached_config = config if config is not None else {}
     return _memorymosaic_cached_config
 
-def _should_show_due_indicator(card: Card | None, config: dict) -> bool:
+def _should_show_due_indicator(card: Card | None, config: dict, today_for_due_calc: int) -> bool:
     if not config.get("show_due_indicator"):
-        return False
-    
-    if not mw or not mw.col or not mw.col.sched:
         return False
     
     if not card:
         return False
     
-    today = mw.col.sched.today
-    return card.queue in [1, 2, 3] and card.due <= today
+    return card.queue in [1, 2, 3] and card.due <= today_for_due_calc
 
 def _get_tile_bg_color(card: Card | None, config: dict) -> str:
     """Determina a cor de fundo do tile com base no status do cartão."""
@@ -137,6 +133,10 @@ def _render_memorymosaic_grid_html(overview_deck_name: str | None = None) -> str
 
     # Espaçamento para separar o addon do conteúdo acima
     spacing_html = '<div style="margin-top: 25px; border-top: 1px solid #e0e0e0; padding-top: 15px;"></div>'
+
+    # >>> PASSO 1: Otimizar mw.col.sched.today <<<
+    today_val = mw.col.sched.today
+    # >>> FIM PASSO 1 <<<
 
     # Leitura da ordenação
     if _session_sort_order_override:
@@ -389,12 +389,10 @@ def _render_memorymosaic_grid_html(overview_deck_name: str | None = None) -> str
                     min_limit_for_color = actual_min_ivl_for_norm
                     max_limit_for_color = actual_max_ivl_for_norm
                 
-                bg_color = _get_gradient_tile_color(card, current_gradient_field, config, 
-                                                    ivl_min_override=min_limit_for_color, 
-                                                    ivl_max_override=max_limit_for_color)
+                bg_color = _get_gradient_tile_color(card, current_gradient_field, config, today_val, ivl_min_override=min_limit_for_color, ivl_max_override=max_limit_for_color)
             else:
                 # Para outros campos, não há overrides de ivl
-                bg_color = _get_gradient_tile_color(card, current_gradient_field, config)
+                bg_color = _get_gradient_tile_color(card, current_gradient_field, config, today_val)
             
             # Coletar estatísticas para o modo gradiente
             if card and current_gradient_field in ["factor", "ivl", "lapses", "due"]:
@@ -419,7 +417,7 @@ def _render_memorymosaic_grid_html(overview_deck_name: str | None = None) -> str
         color_counts[bg_color] = color_counts.get(bg_color, 0) + 1 # Incrementa a contagem da cor
         
         due_indicator_html = ""
-        if _should_show_due_indicator(card, config):
+        if _should_show_due_indicator(card, config, today_val):
             indicator_style = (
                 f"position: absolute; top: 50%; left: 50%; "
                 f"width: {due_indicator_size_px}px; height: {due_indicator_size_px}px; "
@@ -469,8 +467,8 @@ def _render_memorymosaic_grid_html(overview_deck_name: str | None = None) -> str
                     tooltip_parts.append(tr("gradient_tooltip_value", value=card.lapses))
                     tooltip_parts.append(tr("gradient_tooltip_range", min=config.get("gradient_lapses_min", 0), max=config.get("gradient_lapses_max", 10)))
                 elif current_gradient_field == "due" and card.queue == 2:
-                    today = mw.col.sched.today
-                    days_until_due = max(0, card.due - today)
+                    # today = mw.col.sched.today # <--- REMOVIDO, usar today_val
+                    days_until_due = max(0, card.due - today_val) # <--- USADO today_val
                     tooltip_parts.append(tr("gradient_tooltip_value", value=days_until_due))
                     tooltip_parts.append(tr("gradient_tooltip_range", min=config.get("gradient_due_min", 0), max=config.get("gradient_due_max", 90)))
                     
@@ -769,7 +767,7 @@ def _get_gradient_color(value: float, min_val: float, max_val: float, config: di
     # Converter de volta para hex
     return _rgb_to_hex((r, g, b))
 
-def _get_gradient_tile_color(card: Card | None, field: str, config: dict, ivl_min_override: int | None = None, ivl_max_override: int | None = None) -> str:
+def _get_gradient_tile_color(card: Card | None, field: str, config: dict, today_for_due_calc: int, ivl_min_override: int | None = None, ivl_max_override: int | None = None) -> str:
     """Determina a cor do tile com base no gradiente do campo selecionado."""
     if not card:
         return config.get("color_default_bg", "#CCCCCC")
@@ -806,8 +804,7 @@ def _get_gradient_tile_color(card: Card | None, field: str, config: dict, ivl_mi
     elif field == "due":
         # Calcular dias até o vencimento
         if card.queue == 2:  # Cartão em revisão
-            today = mw.col.sched.today
-            days_until_due = card.due - today
+            days_until_due = card.due - today_for_due_calc
             value = max(0, days_until_due)  # Não negativo
             min_val = config.get("gradient_due_min", 0)
             max_val = config.get("gradient_due_max", 90)
