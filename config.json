@@ -17,7 +17,7 @@
     "grid_max_height_px": 1000,
     "grid_padding_px": 5,
     "label_sort_order_group": "Ordenar por",
-    "memorymosaic_default_sort_order": "id_asc",
+    "memorymosaic_default_sort_order": "ivl_desc",
     "memorymosaic_default_view_mode": "categorical",
     "memorymosaic_default_gradient_field": "ivl",
     "gradient_factor_min": 1300,

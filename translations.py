@@ -86,6 +86,12 @@ translations = {
         # Erros
         "error_loading": "Erro ao carregar Memory Mosaic: {error}",
         "error_config": "Erro nas configurações: {error}",
+
+        # Paginação (Novo)
+        "no_cards_in_initial_load": "Nenhum cartão para exibir na carga inicial (total no filtro: {count}). Clique em 'Mostrar Todos'.",
+        "cards_shown_of_total": "{count_shown} de {count_total} cartões",
+        "pagination_show_more": "Mostrar mais {count}",
+        "pagination_show_all": "Mostrar Todos ({count})",
     },
     "en": {
         # Titles and headers
@@ -157,6 +163,12 @@ translations = {
         # Errors
         "error_loading": "Error loading Memory Mosaic: {error}",
         "error_config": "Configuration error: {error}",
+
+        # Pagination (New)
+        "no_cards_in_initial_load": "No cards to display in initial load (total in filter: {count}). Click 'Show All'.",
+        "cards_shown_of_total": "{count_shown} of {count_total} cards",
+        "pagination_show_more": "Show {count} more",
+        "pagination_show_all": "Show All ({count})",
     }
 }
 

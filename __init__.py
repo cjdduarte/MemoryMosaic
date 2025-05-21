@@ -33,6 +33,10 @@ _session_gradient_field_override: str | None = None
 _is_syncing: bool = False
 _is_closing: bool = False
 
+# Novas variáveis de sessão para paginação
+_session_current_display_limit: int | None = None
+_session_last_filter_details: tuple | None = None # (filter_str, sort_order, view_mode, gradient_field)
+
 def _get_addon_config() -> dict:
     """Carrega a configuração do addon, utilizando um cache interno."""
     global _memorymosaic_cached_config
@@ -108,6 +112,10 @@ def _render_memorymosaic_grid_html(overview_deck_name: str | None = None) -> str
     global _session_view_mode_override
     global _session_gradient_field_override
     
+    # Variáveis de sessão para paginação
+    global _session_current_display_limit
+    global _session_last_filter_details
+
     # Verificação crucial no início da função
     if not mw or not mw.col or not mw.col.sched or not mw.col.db or not mw.col.decks:
         # Tenta usar tr() para a mensagem, com fallback se tr() não estiver disponível
@@ -188,19 +196,32 @@ def _render_memorymosaic_grid_html(overview_deck_name: str | None = None) -> str
     # A lógica de cálculo precisa saber disso.
     TILE_BORDER_WIDTH_FIXED_PX = 1 
 
-    search_query = ""
+    # Configurações de Paginação
+    initial_card_load_count = config.get("initial_card_load_count", 4000)
+    incremental_card_load_count = config.get("incremental_card_load_count", 4000)
+
+    search_query_final = ""
     # Priorizar o deck do overview se estivermos nessa tela
     if overview_deck_name: 
-        search_query = f'deck:"{overview_deck_name}"'
+        search_query_final = f'deck:"{overview_deck_name}"'
     # Caso contrário (Deck Browser), usar o filtro global se definido
     elif memorymosaic_default_deck_filter: 
-        search_query = f'deck:"{memorymosaic_default_deck_filter}"'
+        search_query_final = f'deck:"{memorymosaic_default_deck_filter}"'
     # Se nenhum dos anteriores (estamos no Deck Browser e memorymosaic_default_deck_filter está vazio), 
-    # search_query permanece "" (todos os cartões), o que é o comportamento desejado.
+    # search_query_final permanece "" (todos os cartões), o que é o comportamento desejado.
+
+    # Lógica de reset da paginação
+    current_filter_details = (search_query_final, current_sort_order_key, current_view_mode, current_gradient_field)
+    if _session_last_filter_details != current_filter_details:
+        _session_current_display_limit = None # Resetar ao mudar filtro/ordem
+        _session_last_filter_details = current_filter_details
+
+    if _session_current_display_limit is None:
+        _session_current_display_limit = initial_card_load_count
 
     try:
         # Aplicar a ordenação aqui
-        cids = mw.col.find_cards(search_query, order=db_sort_order) 
+        all_cids_full_list = mw.col.find_cards(search_query_final, order=db_sort_order)
     except AttributeError: # Esta exceção já existia e é uma boa proteção
         # Tenta usar tr() para a mensagem
         try:
@@ -208,7 +229,18 @@ def _render_memorymosaic_grid_html(overview_deck_name: str | None = None) -> str
         except Exception:
             return "<p>Aguardando coleção do Anki...</p>"
 
-    card_count = len(cids) 
+    total_cards_in_filter = len(all_cids_full_list)
+
+    # Aplicar o limite de exibição (paginação)
+    # Se _session_current_display_limit for float('inf'), significa mostrar todos
+    limit_for_slicing = _session_current_display_limit 
+    if limit_for_slicing == float('inf'):
+        # Não podemos fatiar com float('inf'), então usamos o tamanho total ou None para pegar tudo
+        limit_for_slicing = None 
+    
+    cids = all_cids_full_list[:limit_for_slicing] # Usa a lista fatiada para renderização
+
+    card_count_displayed = len(cids) # Número de cartões realmente exibidos
 
     # >>> PASSO 2: Otimizar busca da última data de revisão <<<
     last_review_timestamps_map = {}
@@ -226,8 +258,12 @@ def _render_memorymosaic_grid_html(overview_deck_name: str | None = None) -> str
 
     title_html_no_cards = f'<h4 style="text-align: center; margin-bottom: 10px;">{tr("addon_title")}:</h4>' # Título para quando não há cards
     
-    if card_count == 0:
-        message_no_cards = f'<p style="margin-top: 20px; margin-bottom: 15px; text-align: center;">{tr("no_cards")}</p>'
+    if card_count_displayed == 0:
+        # Mesmo se não há cartões exibidos, pode haver cartões no filtro total que seriam mostrados com "Mostrar Todos"
+        if total_cards_in_filter > 0 and _session_current_display_limit != float('inf'):
+             message_no_cards = f'<p style="margin-top: 20px; margin-bottom: 15px; text-align: center;">{tr("no_cards_in_initial_load", count=total_cards_in_filter)}</p>'
+        else:
+            message_no_cards = f'<p style="margin-top: 20px; margin-bottom: 15px; text-align: center;">{tr("no_cards")}</p>'
         
         # Informações do filtro para o rodapé (mesmo sem cartões)
         filter_info_footer_content_no_cards = ""
@@ -286,7 +322,7 @@ def _render_memorymosaic_grid_html(overview_deck_name: str | None = None) -> str
     current_tile_size_px = tile_default_size_px 
     current_tile_gap_px = tile_default_gap_px
     
-    if card_count > 0:
+    if card_count_displayed > 0:
         ANKI_TABLE_CELL_PADDING_PX = 5 
         TITLE_AREA_ESTIMATED_HEIGHT_PX = 35 
 
@@ -298,7 +334,7 @@ def _render_memorymosaic_grid_html(overview_deck_name: str | None = None) -> str
 
         eff_grid_height = max(eff_grid_height, tile_min_size_px) 
 
-        estimated_s_content = math.sqrt((eff_grid_width * eff_grid_height) / card_count) - (2 * TILE_BORDER_WIDTH_FIXED_PX + current_tile_gap_px)
+        estimated_s_content = math.sqrt((eff_grid_width * eff_grid_height) / card_count_displayed) - (2 * TILE_BORDER_WIDTH_FIXED_PX + current_tile_gap_px)
         estimated_s_content = math.floor(estimated_s_content)
         
         # Limitando o tamanho estimado entre o mínimo e o padrão
@@ -324,7 +360,7 @@ def _render_memorymosaic_grid_html(overview_deck_name: str | None = None) -> str
                 temp_s_content -= 1
                 continue 
 
-            num_rows_needed = math.ceil(card_count / num_cols_css)
+            num_rows_needed = math.ceil(card_count_displayed / num_cols_css)
             height_occupied_visual = num_rows_needed * tile_visual_dim + max(0, num_rows_needed - 1) * current_tile_gap_px
 
             if height_occupied_visual <= eff_grid_height:
@@ -533,7 +569,7 @@ def _render_memorymosaic_grid_html(overview_deck_name: str | None = None) -> str
         active_filter_description = f'{tr("current_filter", filter=memorymosaic_default_deck_filter)} ({tr("filter_subdecks")})'
     else:
         active_filter_description = tr("all_decks")
-    filter_info_footer_content = f'<p style="margin: 3px 0;"><b>{tr("showing")}:</b> {active_filter_description} ({tr("total_cards", count=card_count)})</p>'
+    filter_info_footer_content = f'<p style="margin: 3px 0;"><b>{tr("showing")}:</b> {active_filter_description} ({tr("cards_shown_of_total", count_shown=card_count_displayed, count_total=total_cards_in_filter)})</p>'
 
     filter_info_footer_html = f'''
 <div id="memorymosaic-filter-footer" style="text-align: center; margin-top: 0px; padding-top: 0px; font-size: 0.9em; max-width: {grid_max_width_px}px; margin-left: auto; margin-right: auto;">
@@ -635,6 +671,19 @@ def _render_memorymosaic_grid_html(overview_deck_name: str | None = None) -> str
 
     grid_html_content = f'<div id="memorymosaic-grid-container" style="{grid_container_style}">{all_tiles_html}</div>'
 
+    # Botões de Paginação
+    pagination_buttons_html = ""
+    if _session_current_display_limit != float('inf') and total_cards_in_filter > card_count_displayed:
+        load_more_count = min(incremental_card_load_count, total_cards_in_filter - card_count_displayed)
+        btn_show_more_text = tr("pagination_show_more", count=load_more_count)
+        btn_show_all_text = tr("pagination_show_all", count=total_cards_in_filter)
+
+        pagination_buttons_html = f'''
+<div id="memorymosaic-pagination-controls" style="text-align: center; margin-top: 15px; margin-bottom: 10px;">
+    <button onclick="onMemoryMosaicLoadMore()" style="padding: 8px 15px; margin-right: 10px; border-radius: 4px; border: 1px solid #ccc; background-color: #f0f0f0; cursor: pointer;">{btn_show_more_text}</button>
+    <button onclick="onMemoryMosaicLoadAll()" style="padding: 8px 15px; border-radius: 4px; border: 1px solid #ccc; background-color: #f0f0f0; cursor: pointer;">{btn_show_all_text}</button>
+</div>'''
+
     script_html = f"""
 <script>
     // Garante que o cursor volte ao normal quando a grade for redesenhada
@@ -656,7 +705,6 @@ def _render_memorymosaic_grid_html(overview_deck_name: str | None = None) -> str
     function onMemoryMosaicViewModeChanged(newViewMode) {{
         document.body.style.cursor = 'wait';
         
-        // Atualiza a exibição do seletor de campo de gradiente
         const gradientFieldContainer = document.getElementById('memorymosaic-gradient-field-container');
         if (gradientFieldContainer) {{
             gradientFieldContainer.style.display = (newViewMode === 'gradient') ? 'block' : 'none';
@@ -668,6 +716,16 @@ def _render_memorymosaic_grid_html(overview_deck_name: str | None = None) -> str
     function onMemoryMosaicGradientFieldChanged(newField) {{
         document.body.style.cursor = 'wait';
         pycmd("memorymosaic_gradient_field_change:" + newField);
+    }}
+
+    function onMemoryMosaicLoadMore() {{
+        document.body.style.cursor = 'wait';
+        pycmd("memorymosaic_load_more");
+    }}
+
+    function onMemoryMosaicLoadAll() {{
+        document.body.style.cursor = 'wait';
+        pycmd("memorymosaic_load_all");
     }}
 
     function setMemoryMosaicSortOrderDropdown(sortOrderToSet) {{
@@ -685,7 +743,6 @@ def _render_memorymosaic_grid_html(overview_deck_name: str | None = None) -> str
         }}
         currentViewMode = viewModeToSet;
         
-        // Atualiza a exibição do seletor de campo de gradiente
         const gradientFieldContainer = document.getElementById('memorymosaic-gradient-field-container');
         if (gradientFieldContainer) {{
             gradientFieldContainer.style.display = (viewModeToSet === 'gradient') ? 'block' : 'none';
@@ -701,15 +758,25 @@ def _render_memorymosaic_grid_html(overview_deck_name: str | None = None) -> str
     }}
 
     // Inicializa os dropdowns com os valores corretos ao carregar a grade
+    // Apenas se os elementos existirem (para o caso de não haver cartões e, portanto, não haver controles)
     (function() {{
-        setMemoryMosaicSortOrderDropdown(currentSortOrder);
-        setMemoryMosaicViewModeDropdown(currentViewMode);
-        setMemoryMosaicGradientFieldDropdown(currentGradientField);
+        if (document.getElementById('memorymosaic-sort-order')) {{
+            setMemoryMosaicSortOrderDropdown(currentSortOrder);
+        }}
+        if (document.getElementById('memorymosaic-view-mode')) {{
+            setMemoryMosaicViewModeDropdown(currentViewMode);
+        }}
+        if (document.getElementById('memorymosaic-gradient-field')) {{
+            setMemoryMosaicGradientFieldDropdown(currentGradientField);
+        }}
     }})();
 </script>
 """
 
-    return spacing_html + title_and_controls_html + color_summary_container_html + grid_html_content + filter_info_footer_html + script_html
+    # Atualiza os detalhes do filtro da sessão para a próxima renderização
+    _session_last_filter_details = current_filter_details
+
+    return spacing_html + title_and_controls_html + color_summary_container_html + grid_html_content + pagination_buttons_html + filter_info_footer_html + script_html
 
 def _is_collection_usable() -> bool:
     """Verifica se a coleção está em um estado utilizável."""
@@ -987,9 +1054,17 @@ elif mw and hasattr(mw, "config") and hasattr(mw.config, "config_did_change_hook
 
 def handle_memorymosaic_pycmd(handled: tuple[bool, Any], message: str, context: Any) -> tuple[bool, Any]:
     """Manipula comandos pycmd específicos do Memory Mosaic enviados da webview."""
+    # Declarações globais no início da função para todas as globais modificadas aqui
+    global _session_sort_order_override
+    global _session_view_mode_override
+    global _session_gradient_field_override
+    global _session_current_display_limit
+    # _session_last_filter_details é modificado em _render_memorymosaic_grid_html, não aqui diretamente,
+    # então não precisa de global aqui, mas não faria mal se estivesse.
+
     if not _is_collection_usable():
         return handled
-        
+
     if handled[0]: 
         return handled
 
@@ -1006,7 +1081,6 @@ def handle_memorymosaic_pycmd(handled: tuple[bool, Any], message: str, context: 
             if not _is_collection_usable():
                 return (True, None)
                 
-            global _session_sort_order_override
             new_sort_order = message.split(":")[1]
             valid_sort_orders = ["id_asc", "ivl_asc", "ivl_desc", "due_asc"]
             if new_sort_order in valid_sort_orders:
@@ -1026,7 +1100,6 @@ def handle_memorymosaic_pycmd(handled: tuple[bool, Any], message: str, context: 
             if not _is_collection_usable():
                 return (True, None)
                 
-            global _session_view_mode_override
             new_view_mode = message.split(":")[1]
             valid_view_modes = ["categorical", "gradient"]
             if new_view_mode in valid_view_modes:
@@ -1046,7 +1119,6 @@ def handle_memorymosaic_pycmd(handled: tuple[bool, Any], message: str, context: 
             if not _is_collection_usable():
                 return (True, None)
                 
-            global _session_gradient_field_override
             new_gradient_field = message.split(":")[1]
             valid_gradient_fields = ["factor", "ivl", "lapses", "due"]
             if new_gradient_field in valid_gradient_fields:
@@ -1060,6 +1132,36 @@ def handle_memorymosaic_pycmd(handled: tuple[bool, Any], message: str, context: 
                     pass
             return (True, None)
         except Exception:
+            return (True, None)
+    elif message.startswith("memorymosaic_load_more"):
+        try:
+            if not _is_collection_usable():
+                return (True, None)
+            
+            config = _get_addon_config() # Para pegar incremental_card_load_count
+            incremental_load = config.get("incremental_card_load_count", 4000)
+            
+            if _session_current_display_limit is None: # Caso inicial, embora já deva ser setado em render
+                _session_current_display_limit = config.get("initial_card_load_count", 4000)
+            elif _session_current_display_limit != float('inf'):
+                _session_current_display_limit += incremental_load
+            
+            mw.progress.single_shot(100, lambda: request_refresh_if_memorymosaic_visible() if _is_collection_usable() else None)
+            return (True, None)
+        except Exception as e:
+            print(f"MemoryMosaic error in load_more: {e}")
+            return (True, None)
+    elif message.startswith("memorymosaic_load_all"):
+        try:
+            if not _is_collection_usable():
+                return (True, None)
+            
+            _session_current_display_limit = float('inf') # Sinaliza para carregar todos
+            
+            mw.progress.single_shot(100, lambda: request_refresh_if_memorymosaic_visible() if _is_collection_usable() else None)
+            return (True, None)
+        except Exception as e:
+            print(f"MemoryMosaic error in load_all: {e}")
             return (True, None)
     
     return (False, None)

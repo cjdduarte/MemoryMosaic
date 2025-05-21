@@ -39,6 +39,7 @@ Memory Mosaic is an Anki addon that transforms your card collection into an inte
   - Hover over a square to see card details
   - Click on a square to open the card in Anki's browser
   - A dot in the center indicates cards due today
+- **Progressive Loading:** For very large collections, cards are loaded in batches (e.g., initial 4000), with "Show More" and "Show All" buttons to load the rest, ensuring better initial performance.
 
 ### Main benefits
 
@@ -89,6 +90,7 @@ O Memory Mosaic é um addon para o Anki que transforma sua coleção de cartões
   - Passe o mouse sobre um quadrado para ver detalhes do cartão
   - Clique em um quadrado para abrir o cartão no navegador do Anki
   - Um ponto no centro indica cartões agendados para hoje
+- **Carregamento Progressivo:** Para coleções muito grandes, os cartões são carregados em lotes (ex: 4000 iniciais), com botões "Mostrar Mais" e "Mostrar Todos" para carregar o restante, garantindo melhor performance inicial.
 
 ### Principais benefícios
 
@@ -105,10 +107,11 @@ O Memory Mosaic é um addon para o Anki que transforma sua coleção de cartões
 
 ## **Changelog**
 
-- **v1.2 - 2025-05-22 - Performance Optimizations**: 
+- **v1.2 - 2025-05-21 - Performance Optimizations & Progressive Loading**: 
   - Optimized fetching of last review dates for tooltips (batch query instead of per-card query), significantly improving performance on large collections.
   - Optimized calculation of "today's date" for due checks and gradient calculations (calculated once per grid render).
   - Optimized configuration reading for IVL gradient tooltips (read once per grid render).
+  - Added progressive loading (pagination) for cards, with "Show More" and "Show All" buttons, improving initial load time for very large collections.
 
 - **v1.1 - 2025-05-21 - Bug fix & Improvements**:
   - Corrected the sort order dropdown label to avoid redundancy and improve clarity.
