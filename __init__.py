@@ -63,7 +63,7 @@ def _should_show_due_indicator(card: Card | None, config: dict, today_for_due_ca
 def _get_tile_bg_color(card: Card | None, config: dict) -> str:
     """Determina a cor de fundo do tile com base no status do cartão."""
     if not mw or not mw.col or not config:
-        return config.get("color_default_bg", "#CCCCCC")
+        return config.get("color_default_bg")
 
     if not card:
         return config.get("color_default_bg")
@@ -181,7 +181,7 @@ def _render_memorymosaic_grid_html(overview_deck_name: str | None = None) -> str
         "ivl_desc": "c.ivl desc",  # Intervalo decrescente
         "due_asc": "c.due asc"     # Data de vencimento mais próxima
     }
-    db_sort_order = sort_order_map.get(current_sort_order_key, "c.id asc") # Padrão para id_asc
+    db_sort_order = sort_order_map.get(current_sort_order_key) # Padrão para id_asc
 
     # Carregar configurações de dimensionamento
     tile_default_size_px = config.get("tile_default_size_px")
@@ -197,8 +197,8 @@ def _render_memorymosaic_grid_html(overview_deck_name: str | None = None) -> str
     TILE_BORDER_WIDTH_FIXED_PX = 1 
 
     # Configurações de Paginação
-    initial_card_load_count = config.get("initial_card_load_count", 4000)
-    incremental_card_load_count = config.get("incremental_card_load_count", 4000)
+    initial_card_load_count = config.get("initial_card_load_count")
+    incremental_card_load_count = config.get("incremental_card_load_count")
 
     search_query_final = ""
     # Priorizar o deck do overview se estivermos nessa tela
@@ -290,7 +290,7 @@ def _render_memorymosaic_grid_html(overview_deck_name: str | None = None) -> str
     <h4 style="margin: 0 15px 0 0; padding:0;">{tr("addon_title")}:</h4>
     
     <div style="margin-right: 15px;">
-        <label for="memorymosaic-sort-order" style="margin-right: 5px; font-weight: normal; font-size: 14px;">{config.get("label_sort_order_group", "Ordenar por:")}</label>
+        <label for="memorymosaic-sort-order" style="margin-right: 5px; font-weight: normal; font-size: 14px;">{config.get("label_sort_order_group")}</label>
         <select id="memorymosaic-sort-order" onchange="onMemoryMosaicSortOrderChanged(this.value)" style="padding: 5px; border-radius: 4px; border: 1px solid #ccc;">
             <option value="id_asc">{tr("sort_by_creation")}</option>
             <option value="ivl_asc">{tr("sort_by_interval_asc")}</option>
@@ -386,7 +386,7 @@ def _render_memorymosaic_grid_html(overview_deck_name: str | None = None) -> str
     # >>> INÍCIO DAS NOVAS ADIÇÕES PARA IVL DINÂMICO <<<
     actual_min_ivl_for_norm: int | None = None
     actual_max_ivl_for_norm: int | None = None
-    normalize_ivl_active = config.get("gradient_ivl_normalize", True) # Padrão True conforme config.md
+    normalize_ivl_active = config.get("gradient_ivl_normalize") # Padrão True conforme config.md
 
     if current_view_mode == "gradient" and current_gradient_field == "ivl" and normalize_ivl_active:
         temp_min_ivl = float('inf')
@@ -405,8 +405,8 @@ def _render_memorymosaic_grid_html(overview_deck_name: str | None = None) -> str
             actual_max_ivl_for_norm = int(temp_max_ivl)
         else:
             # Fallback para config se nenhum cartão aplicável for encontrado
-            actual_min_ivl_for_norm = config.get("gradient_ivl_min", 0)
-            actual_max_ivl_for_norm = config.get("gradient_ivl_max", 365)
+            actual_min_ivl_for_norm = config.get("gradient_ivl_min")
+            actual_max_ivl_for_norm = config.get("gradient_ivl_max")
         
         # Garantir que min não seja maior que max, e que não sejam iguais para _get_gradient_color
         if actual_min_ivl_for_norm is not None and actual_max_ivl_for_norm is not None:
@@ -419,8 +419,8 @@ def _render_memorymosaic_grid_html(overview_deck_name: str | None = None) -> str
     tooltip_config_min_ivl_for_gradient_tooltip: int | None = None
     tooltip_config_max_ivl_for_gradient_tooltip: int | None = None
     if current_view_mode == "gradient" and current_gradient_field == "ivl" and not (normalize_ivl_active and actual_min_ivl_for_norm is not None and actual_max_ivl_for_norm is not None):
-        tooltip_config_min_ivl_for_gradient_tooltip = config.get("gradient_ivl_min", 0)
-        tooltip_config_max_ivl_for_gradient_tooltip = config.get("gradient_ivl_max", 365)
+        tooltip_config_min_ivl_for_gradient_tooltip = config.get("gradient_ivl_min")
+        tooltip_config_max_ivl_for_gradient_tooltip = config.get("gradient_ivl_max")
     # >>> FIM PASSO 3 <<<
 
     for cid in cids: 
@@ -430,8 +430,8 @@ def _render_memorymosaic_grid_html(overview_deck_name: str | None = None) -> str
         if current_view_mode == "gradient":
             bg_color = "" # Inicializa bg_color
             if current_gradient_field == "ivl":
-                min_limit_for_color = config.get("gradient_ivl_min", 0)
-                max_limit_for_color = config.get("gradient_ivl_max", 365)
+                min_limit_for_color = config.get("gradient_ivl_min")
+                max_limit_for_color = config.get("gradient_ivl_max")
                 if normalize_ivl_active and actual_min_ivl_for_norm is not None and actual_max_ivl_for_norm is not None:
                     min_limit_for_color = actual_min_ivl_for_norm
                     max_limit_for_color = actual_max_ivl_for_norm
@@ -499,7 +499,7 @@ def _render_memorymosaic_grid_html(overview_deck_name: str | None = None) -> str
             if current_view_mode == "gradient":
                 if current_gradient_field == "factor":
                     tooltip_parts.append(tr("gradient_tooltip_value", value=card.factor))
-                    tooltip_parts.append(tr("gradient_tooltip_range", min=config.get("gradient_factor_min", 1500), max=config.get("gradient_factor_max", 2900)))
+                    tooltip_parts.append(tr("gradient_tooltip_range", min=config.get("gradient_factor_min"), max=config.get("gradient_factor_max")))
                 elif current_gradient_field == "ivl":
                     tooltip_parts.append(tr("gradient_tooltip_value", value=card.ivl))
                     
@@ -518,12 +518,12 @@ def _render_memorymosaic_grid_html(overview_deck_name: str | None = None) -> str
                             
                 elif current_gradient_field == "lapses":
                     tooltip_parts.append(tr("gradient_tooltip_value", value=card.lapses))
-                    tooltip_parts.append(tr("gradient_tooltip_range", min=config.get("gradient_lapses_min", 0), max=config.get("gradient_lapses_max", 10)))
+                    tooltip_parts.append(tr("gradient_tooltip_range", min=config.get("gradient_lapses_min"), max=config.get("gradient_lapses_max")))
                 elif current_gradient_field == "due" and card.queue == 2:
                     # today = mw.col.sched.today # <--- REMOVIDO, usar today_val
                     days_until_due = max(0, card.due - today_val) # <--- USADO today_val
                     tooltip_parts.append(tr("gradient_tooltip_value", value=days_until_due))
-                    tooltip_parts.append(tr("gradient_tooltip_range", min=config.get("gradient_due_min", 0), max=config.get("gradient_due_max", 90)))
+                    tooltip_parts.append(tr("gradient_tooltip_range", min=config.get("gradient_due_min"), max=config.get("gradient_due_max")))
                     
         title_tooltip = "&#10;".join(tooltip_parts)
 
@@ -611,14 +611,14 @@ def _render_memorymosaic_grid_html(overview_deck_name: str | None = None) -> str
         default_order_legend = "asc"
         if current_gradient_field == "lapses": # Lapses: menor é melhor por padrão
             default_order_legend = "desc"
-        field_order_legend = config.get(order_config_key_legend, default_order_legend)
+        field_order_legend = config.get(order_config_key_legend)
         # Agora field_order_legend pode ser usado para o texto e para as cores da barra
 
         field_order_for_legend_text = field_order_legend # Usar a ordem determinada para o texto
         
         if current_gradient_field == "factor":
-            min_val = config.get("gradient_factor_min", 1500)
-            max_val = config.get("gradient_factor_max", 2900)
+            min_val = config.get("gradient_factor_min")
+            max_val = config.get("gradient_factor_max")
             gradient_field_label = tr("gradient_field_factor")
         elif current_gradient_field == "ivl":
             gradient_field_label = tr("gradient_field_ivl")
@@ -627,15 +627,15 @@ def _render_memorymosaic_grid_html(overview_deck_name: str | None = None) -> str
                 max_val = actual_max_ivl_for_norm
                 gradient_field_label += f" {tr('legend_dynamic_scale')}" # Adiciona (escala dinâmica)
             else:
-                min_val = config.get("gradient_ivl_min", 0)
-                max_val = config.get("gradient_ivl_max", 365)
+                min_val = config.get("gradient_ivl_min")
+                max_val = config.get("gradient_ivl_max")
         elif current_gradient_field == "lapses":
-            min_val = config.get("gradient_lapses_min", 0)
-            max_val = config.get("gradient_lapses_max", 10)
+            min_val = config.get("gradient_lapses_min")
+            max_val = config.get("gradient_lapses_max")
             gradient_field_label = tr("gradient_field_lapses")
         elif current_gradient_field == "due":
-            min_val = config.get("gradient_due_min", 0)
-            max_val = config.get("gradient_due_max", 90)
+            min_val = config.get("gradient_due_min")
+            max_val = config.get("gradient_due_max")
             gradient_field_label = tr("gradient_field_due")
 
         # Adicionar indicador de "melhor" para a legenda
@@ -645,9 +645,9 @@ def _render_memorymosaic_grid_html(overview_deck_name: str | None = None) -> str
             gradient_field_label += f" {tr('legend_lower_is_better')}"
             
         # Cores do gradiente para a legenda
-        display_start_color = config.get("gradient_color_start", "#FFEB3B")
-        display_mid_color = config.get("gradient_color_mid", "#4CAF50")
-        display_end_color = config.get("gradient_color_end", "#1565C0")
+        display_start_color = config.get("gradient_color_start")
+        display_mid_color = config.get("gradient_color_mid")
+        display_end_color = config.get("gradient_color_end")
         
         # field_order_legend já foi definido acima
         if field_order_legend == "desc":
@@ -816,7 +816,7 @@ def _get_gradient_color(value: float, min_val: float, max_val: float, config: di
     """Calcula a cor do gradiente para um valor entre o mínimo e o máximo."""
     # Prevenir divisão por zero
     if min_val == max_val:
-        return config.get("gradient_color_mid", "#4CAF50")
+        return config.get("gradient_color_mid")
         
     # Normalizar o valor para [0, 1]
     normalized = max(0, min(1, (value - min_val) / (max_val - min_val)))
@@ -825,9 +825,9 @@ def _get_gradient_color(value: float, min_val: float, max_val: float, config: di
         normalized = 1.0 - normalized
     
     # Obter cores do gradiente do config
-    start_color = config.get("gradient_color_start", "#FFEB3B")  # Amarelo
-    mid_color = config.get("gradient_color_mid", "#4CAF50")      # Verde
-    end_color = config.get("gradient_color_end", "#1565C0")      # Azul
+    start_color = config.get("gradient_color_start")  # Amarelo
+    mid_color = config.get("gradient_color_mid")      # Verde
+    end_color = config.get("gradient_color_end")      # Azul
     
     # Converter para RGB para interpolação
     start_rgb = _hex_to_rgb(start_color)
@@ -854,15 +854,15 @@ def _get_gradient_color(value: float, min_val: float, max_val: float, config: di
 def _get_gradient_tile_color(card: Card | None, field: str, config: dict, today_for_due_calc: int, ivl_min_override: int | None = None, ivl_max_override: int | None = None) -> str:
     """Determina a cor do tile com base no gradiente do campo selecionado."""
     if not card:
-        return config.get("color_default_bg", "#CCCCCC")
+        return config.get("color_default_bg")
         
     # Cartões suspensos/enterrados sempre têm a mesma cor
     if card.queue in [-1, -2, -3]:
-        return config.get("color_suspended_buried", "#222222")
+        return config.get("color_suspended_buried")
         
     # Cartões novos devem usar a cor de 'novo' do config, mesmo no modo gradiente
     if card.type == 0:
-        return config.get("color_new", "#FFFFFF") # Cor para cartões novos
+        return config.get("color_new") # Cor para cartões novos
         
     # Obter o valor de acordo com o campo
     value = None
@@ -871,36 +871,36 @@ def _get_gradient_tile_color(card: Card | None, field: str, config: dict, today_
     
     if field == "factor":
         value = card.factor
-        min_val = config.get("gradient_factor_min", 1500)
-        max_val = config.get("gradient_factor_max", 2900)
+        min_val = config.get("gradient_factor_min")
+        max_val = config.get("gradient_factor_max")
     elif field == "ivl":
         value = card.ivl
         if ivl_min_override is not None and ivl_max_override is not None:
             min_val = ivl_min_override
             max_val = ivl_max_override
         else: # Fallback se overrides não forem passados (não deveria acontecer com a nova lógica)
-            min_val = config.get("gradient_ivl_min", 0)
-            max_val = config.get("gradient_ivl_max", 365)
+            min_val = config.get("gradient_ivl_min")
+            max_val = config.get("gradient_ivl_max")
     elif field == "lapses":
         value = card.lapses
-        min_val = config.get("gradient_lapses_min", 0)
-        max_val = config.get("gradient_lapses_max", 10)
+        min_val = config.get("gradient_lapses_min")
+        max_val = config.get("gradient_lapses_max")
     elif field == "due":
         # Calcular dias até o vencimento
         if card.queue == 2:  # Cartão em revisão
             days_until_due = card.due - today_for_due_calc
             value = max(0, days_until_due)  # Não negativo
-            min_val = config.get("gradient_due_min", 0)
-            max_val = config.get("gradient_due_max", 90)
+            min_val = config.get("gradient_due_min")
+            max_val = config.get("gradient_due_max")
         else:
             # Para cartões que não estão em revisão, usar verde médio
-            return config.get("gradient_color_mid", "#4CAF50")
+            return config.get("gradient_color_mid")
     else:
         # Campo não reconhecido, usar cor padrão
-        return config.get("color_default_bg", "#CCCCCC")
+        return config.get("color_default_bg")
     
     if value is None:
-        return config.get("color_default_bg", "#CCCCCC")
+        return config.get("color_default_bg")
         
     # Determinar se o gradiente deve ser invertido
     invert_gradient = False
@@ -911,7 +911,7 @@ def _get_gradient_tile_color(card: Card | None, field: str, config: dict, today_
     if field == "lapses": # Para lapsos, menor é melhor, então a ordem natural do gradiente invertido é desejada
         default_order = "desc"
     
-    field_order = config.get(order_config_key, default_order)
+    field_order = config.get(order_config_key)
     if field_order == "desc":
         invert_gradient = True
         
@@ -1139,10 +1139,10 @@ def handle_memorymosaic_pycmd(handled: tuple[bool, Any], message: str, context: 
                 return (True, None)
             
             config = _get_addon_config() # Para pegar incremental_card_load_count
-            incremental_load = config.get("incremental_card_load_count", 4000)
+            incremental_load = config.get("incremental_card_load_count")
             
             if _session_current_display_limit is None: # Caso inicial, embora já deva ser setado em render
-                _session_current_display_limit = config.get("initial_card_load_count", 4000)
+                _session_current_display_limit = config.get("initial_card_load_count")
             elif _session_current_display_limit != float('inf'):
                 _session_current_display_limit += incremental_load
             

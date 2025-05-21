@@ -62,8 +62,6 @@ Memory Mosaic is an Anki addon that transforms your card collection into an inte
 
 O Memory Mosaic é um addon para o Anki que transforma sua coleção de cartões em uma grade visual interativa. Cada cartão é representado por um pequeno quadrado colorido ("tile"), cuja cor indica o status de aprendizado atual. É semelhante a um desfragmentador de disco, mas para seus cartões de estudo!
 
-*Adicione aqui uma screenshot do Memory Mosaic em ação.*
-
 ![Memory Mosaic exemplo](https://i.ibb.co/8L2f5GjZ/image.png)
 
 ![Memory Mosaic exemplo](https://i.ibb.co/5XnVCRq0/image.png)
