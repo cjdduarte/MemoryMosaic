@@ -1,0 +1,20 @@
+# Ignora arquivos e pastas de cache do Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Ignora todas as pastas ocultas (ex: .vscode, .idea)
+.*/*
+
+# Ignora arquivos temporários de sistema
+*.swp
+*.swo
+*.bak
+*.tmp
+
+# Ignora arquivos de backup do editor
+*~
+
+# Ignora arquivos de configuração do Anki (se necessário)
+*.anki2
+collection.anki2
