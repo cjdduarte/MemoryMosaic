@@ -24,7 +24,7 @@
     "gradient_factor_order": "asc",
     "gradient_ivl_min": 0,
     "gradient_ivl_max": 900,
-    "gradient_normalize_ivl": true,
+    "gradient_ivl_normalize": true,
     "gradient_ivl_order": "asc",
     "gradient_lapses_min": 0,
     "gradient_lapses_max": 10,

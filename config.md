@@ -98,7 +98,7 @@ Após modificar o `config.json` diretamente, pode ser necessário reiniciar o An
         *   `"due"`: Tempo até o vencimento.
     *   Padrão: `"ivl"`
 
-*   `"gradient_normalize_ivl"`: Define se o gradiente de intervalos (ivl) deve ser normalizado dinamicamente com base nos valores mínimos e máximos reais dos cartões sendo exibidos, ou se deve usar os limites fixos `gradient_ivl_min` e `gradient_ivl_max`.
+*   `"gradient_ivl_normalize"`: Define se o gradiente de intervalos (ivl) deve ser normalizado dinamicamente com base nos valores mínimos e máximos reais dos cartões sendo exibidos, ou se deve usar os limites fixos `gradient_ivl_min` e `gradient_ivl_max`.
     *   Opções válidas:
         *   `true` (Padrão): Usa os valores mínimos e máximos reais dos cartões atualmente visíveis (que não são novos ou suspensos) para definir a escala do gradiente de cores para o campo "ivl". A legenda e os tooltips refletirão esta escala dinâmica.
         *   `false`: Usa os valores `gradient_ivl_min` e `gradient_ivl_max` do `config.json` para definir a escala de cores. Se um valor real de um cartão estiver fora dessa faixa, o tooltip indicará "(valor real: X)".
@@ -110,7 +110,7 @@ Após modificar o `config.json` diretamente, pode ser necessário reiniciar o An
     *   `"gradient_factor_order"`: Define a direção do gradiente para o fator de facilidade.
         *   `"asc"` (Padrão): Valores maiores (melhor fator) tendem a `gradient_color_end`.
         *   `"desc"`: Valores menores (pior fator, embora menos comum para "ease") tendem a `gradient_color_end`.
-    *   `"gradient_ivl_min"` e `"gradient_ivl_max"`: Faixa para intervalos em dias (0-365) quando `gradient_normalize_ivl` é `false`.
+    *   `"gradient_ivl_min"` e `"gradient_ivl_max"`: Faixa para intervalos em dias (0-365) quando `gradient_ivl_normalize` é `false`.
     *   `"gradient_ivl_order"`: Define a direção do gradiente para o intervalo.
         *   `"asc"` (Padrão): Maiores intervalos (mais maduro) tendem a `gradient_color_end`.
         *   `"desc"`: Menores intervalos tendem a `gradient_color_end`.
@@ -229,7 +229,7 @@ After modifying the `config.json` directly, you may need to restart Anki for the
         *   `"due"`: Time until due.
     *   Default: `"ivl"`
 
-*   `"gradient_normalize_ivl"`: Determines if the interval gradient (ivl) should be dynamically normalized based on the actual minimum and maximum values of the cards being displayed, or if it should use the fixed `gradient_ivl_min` and `gradient_ivl_max` limits.
+*   `"gradient_ivl_normalize"`: Determines if the interval gradient (ivl) should be dynamically normalized based on the actual minimum and maximum values of the cards being displayed, or if it should use the fixed `gradient_ivl_min` and `gradient_ivl_max` limits.
     *   Valid options:
         *   `true` (Default): Uses the actual minimum and maximum values from the currently visible cards (that are not new or suspended) to define the color gradient scale for the "ivl" field. The legend and tooltips will reflect this dynamic scale.
         *   `false`: Uses the `gradient_ivl_min` and `gradient_ivl_max` values from `config.json` to define the color scale. If a card's actual value is outside this range, the tooltip will indicate "(actual value: X)".
@@ -241,7 +241,7 @@ After modifying the `config.json` directly, you may need to restart Anki for the
     *   `"gradient_factor_order"`: Defines the gradient direction for ease factor.
         *   `"asc"` (Default): Higher values (better factor) tend towards `gradient_color_end`.
         *   `"desc"`: Lower values (worse factor, though less common for "ease") tend towards `gradient_color_end`.
-    *   `"gradient_ivl_min"` and `"gradient_ivl_max"`: Range for intervals in days (0-365) when `gradient_normalize_ivl` is `false`.
+    *   `"gradient_ivl_min"` and `"gradient_ivl_max"`: Range for intervals in days (0-365) when `gradient_ivl_normalize` is `false`.
     *   `"gradient_ivl_order"`: Defines the gradient direction for interval.
         *   `"asc"` (Default): Longer intervals (more mature) tend towards `gradient_color_end`.
         *   `"desc"`: Shorter intervals tend towards `gradient_color_end`.

@@ -58,7 +58,7 @@ Melhorias e funcionalidades extras a serem consideradas após a implementação 
     *   [X] Direção do gradiente configurável por campo (`gradient_<field>_order`) via `config.json`.
     *   [ ] Permitir ao usuário customizar mais aspectos da aparência da grade (ex: largura da borda configurável via `config.json`).
 *   **3.6. Modos de visualização e ordenação avançados:**
-    *   [X] Normalização dinâmica opcional para o gradiente do campo "intervalo" (`gradient_normalize_ivl`).
+    *   [X] Normalização dinâmica opcional para o gradiente do campo "intervalo" (`gradient_ivl_normalize`).
     *   [X] Modo gradiente visualiza por fator de facilidade, intervalo, lapsos ou tempo até o vencimento (removido "repetições").
     *   [ ] Implementar uma visualização em modo "heatmap" com gradiente de cores baseado em facilidade (ease).
     *   [ ] Adicionar opção para visualização em grupos/clusters de cartões por deck ou tag.

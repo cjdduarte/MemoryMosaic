@@ -347,7 +347,7 @@ def _render_memorymosaic_grid_html(overview_deck_name: str | None = None) -> str
     # >>> INÍCIO DAS NOVAS ADIÇÕES PARA IVL DINÂMICO <<<
     actual_min_ivl_for_norm: int | None = None
     actual_max_ivl_for_norm: int | None = None
-    normalize_ivl_active = config.get("gradient_normalize_ivl", True) # Padrão True conforme config.md
+    normalize_ivl_active = config.get("gradient_ivl_normalize", True) # Padrão True conforme config.md
 
     if current_view_mode == "gradient" and current_gradient_field == "ivl" and normalize_ivl_active:
         temp_min_ivl = float('inf')
