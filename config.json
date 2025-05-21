@@ -35,5 +35,7 @@
     "gradient_due_order": "asc",
     "gradient_color_start": "#ff3b3b",
     "gradient_color_mid": "#FFEB3B",
-    "gradient_color_end": "#1565C0"
+    "gradient_color_end": "#1565C0",
+    "initial_card_load_count": 4000,
+    "incremental_card_load_count": 4000
 } 
