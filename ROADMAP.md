@@ -65,3 +65,10 @@ Melhorias e funcionalidades extras a serem consideradas após a implementação 
     *   [X] Implementar infraestrutura para tradução da interface do addon (textos no sumário, tooltips, futura tela de configuração).
 
 Este roadmap é um guia e pode ser ajustado conforme o desenvolvimento avança. 
+
+Memory Mosaic 🟥🟨🟩🟦
+anki mosaic visual grid cards color status tiles interactive tracking overview
+https://github.com/cjdduarte/MemoryMosaic/issues
+
+2.1.50
+25.02.5
