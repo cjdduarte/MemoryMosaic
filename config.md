@@ -86,7 +86,7 @@ Após modificar o `config.json` diretamente, pode ser necessário reiniciar o An
 
 *   `"memorymosaic_default_view_mode"`: Define o modo de visualização padrão.
     *   Opções válidas:
-        *   `"categorical"` (Padrão): Utiliza cores categóricas para os diferentes status de cartões.
+        *   `"categorical"` (Padrão): Utiliza cores por estado dos cartões (novo, maduro, jovem, etc).
         *   `"gradient"`: Utiliza um gradiente de cores com base em uma propriedade selecionada.
     *   Padrão: `"categorical"`
 
@@ -207,7 +207,7 @@ After modifying the `config.json` directly, you may need to restart Anki for the
 
 *   `"memorymosaic_default_view_mode"`: Defines the default visualization mode.
     *   Valid options:
-        *   `"categorical"` (Default): Uses categorical colors for different card statuses.
+        *   `"categorical"` (Default): Uses colors based on card states (new, mature, young, etc).
         *   `"gradient"`: Uses a color gradient based on a selected property.
     *   Default: `"categorical"`
 

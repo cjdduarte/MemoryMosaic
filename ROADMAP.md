@@ -18,10 +18,10 @@ O objetivo desta fase é ter uma grade de quadrados representando os cartões ex
 
 ## Fase 2: Coloração Dinâmica e Atualização em Tempo Real
 
-Nesta fase, os quadrados da grade ganharão cores baseadas no status dos cartões e serão atualizados dinamicamente.
+Nesta fase, os quadrados da grade ganharão cores baseadas nos estados dos cartões e serão atualizados dinamicamente.
 
-*   **2.1. Mapeamento de Status para Cores:**
-    *   [X] Definir e implementar um esquema de cores para os diferentes status dos cartões:
+*   **2.1. Mapeamento de Estados para Cores:**
+    *   [X] Definir e implementar um esquema de cores para os diferentes estados dos cartões:
         *   **Verde Escuro:** Maduro (ex: intervalo > 21 dias).
         *   **Verde Claro:** Jovem ou em aprendizado.
         *   **Vermelho:** Errado/Lapso (reaprendizado).

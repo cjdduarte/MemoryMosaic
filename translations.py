@@ -63,7 +63,7 @@ translations = {
         
         # Visualização - Novos
         "view_mode": "Modo de Visualização",
-        "view_categorical": "Categorias",
+        "view_categorical": "Estados dos Cartões",
         "view_gradient": "Gradiente",
         "gradient_field": "Campo para Gradiente",
         "gradient_field_factor": "Facilidade",
@@ -132,7 +132,7 @@ translations = {
         
         # Visualization - New
         "view_mode": "View Mode",
-        "view_categorical": "Categories",
+        "view_categorical": "Card States",
         "view_gradient": "Gradient",
         "gradient_field": "Gradient Field",
         "gradient_field_factor": "Ease Factor",

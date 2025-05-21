@@ -15,12 +15,19 @@ Memory Mosaic is an Anki addon that transforms your card collection into an inte
 ### How does it work?
 
 - **Grid Visualization:** Your cards are organized into a compact grid, allowing you to view hundreds or thousands of cards at once.
-- **Intuitive Color System:**
+- **Two Visualization Modes:**
+  - **Card States:** Shows cards colored by their learning state
+  - **Gradient:** Shows cards in a color gradient based on properties like interval, ease factor, repetitions, lapses, or time until due
+- **Intuitive Color System (Card States mode):**
   - **White:** New cards
   - **Dark Green:** Mature cards (interval ≥ 21 days)
   - **Light Green:** Young/learning cards
   - **Red:** Relearning cards
   - **Dark Gray:** Suspended/buried cards
+- **Sorting Options:**
+  - By creation date
+  - By interval (ascending or descending)
+  - By due date
 - **Interactivity:**
   - Hover over a square to see card details
   - Click on a square to open the card in Anki's browser
@@ -29,7 +36,7 @@ Memory Mosaic is an Anki addon that transforms your card collection into an inte
 ### Main benefits
 
 - **Panoramic View:** See your entire collection or specific deck at once
-- **Visual Tracking:** Immediately see the distribution of different card statuses
+- **Visual Tracking:** Immediately see the distribution of different card states
 - **Natural Integration:** Automatically appears in the deck browser and overview screen
 - **Automatic Updates:** Updates when you navigate or sync with AnkiWeb
 
@@ -64,12 +71,19 @@ O Memory Mosaic é um addon para o Anki que transforma sua coleção de cartões
 ### Como funciona?
 
 - **Visualização em Grade:** Seus cartões são organizados em uma grade compacta, permitindo visualizar centenas ou milhares de cartões de uma só vez.
-- **Sistema de Cores Intuitivo:**
+- **Dois Modos de Visualização:**
+  - **Estados dos Cartões:** Mostra cartões coloridos por seu estado de aprendizado
+  - **Gradiente:** Mostra cartões em um gradiente de cores baseado em propriedades como intervalo, fator de facilidade, repetições, lapsos ou tempo até o vencimento
+- **Sistema de Cores Intuitivo (modo Estados dos Cartões):**
   - **Branco:** Cartões novos
   - **Verde Escuro:** Cartões maduros (intervalo ≥ 21 dias)
   - **Verde Claro:** Cartões jovens/em aprendizado
   - **Vermelho:** Cartões em reaprendizado
   - **Cinza Escuro:** Cartões suspensos/enterrados
+- **Opções de Ordenação:**
+  - Por data de criação
+  - Por intervalo (crescente ou decrescente)
+  - Por data de vencimento
 - **Interatividade:**
   - Passe o mouse sobre um quadrado para ver detalhes do cartão
   - Clique em um quadrado para abrir o cartão no navegador do Anki
@@ -78,7 +92,7 @@ O Memory Mosaic é um addon para o Anki que transforma sua coleção de cartões
 ### Principais benefícios
 
 - **Visão Panorâmica:** Visualize toda sua coleção ou deck específico de uma só vez
-- **Acompanhamento Visual:** Veja a distribuição dos diferentes status de cartões imediatamente
+- **Acompanhamento Visual:** Veja a distribuição dos diferentes estados dos cartões imediatamente
 - **Integração Natural:** Aparece automaticamente no navegador de decks e na tela de visão geral
 - **Atualização Automática:** Se atualiza quando você navega ou sincroniza com o AnkiWeb
 
@@ -106,11 +120,14 @@ Ou instale manualmente através do arquivo `.ankiaddon`.
 
 - **v1.0 - Initial Release**:
   - Interactive visual grid for card visualization
-  - Color system for card status (new, mature, young, relearning, suspended)
+  - Two visualization modes: Card States and Gradient
+  - Color system for card states (new, mature, young, relearning, suspended)
+  - Gradient visualization by interval, ease factor, repetitions, lapses, or time until due
+  - Multiple sorting options (creation date, interval, due date)
   - Integration with Deck Browser and Overview screen
   - Automatic updates when navigating or syncing
   - Tooltips with detailed information on mouse hover
   - Interactivity to open cards in Anki's browser
   - Current deck filtering
-  - Customizable settings (size, spacing, colors)
+  - Customizable settings (size, spacing, colors, gradient properties)
   - Multilingual support
