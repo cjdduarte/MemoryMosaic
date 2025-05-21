@@ -12,6 +12,13 @@
 
 Memory Mosaic is an Anki addon that transforms your card collection into an interactive visual grid. Each card is represented by a small colored square ("tile"), with the color indicating the current learning status. It's similar to a disk defragmenter, but for your study cards!
 
+![Memory Mosaic exemplo](https://i.ibb.co/8L2f5GjZ/image.png)
+
+![Memory Mosaic exemplo](https://i.ibb.co/5XnVCRq0/image.png)
+
+![Memory Mosaic exemplo](https://i.ibb.co/x8Jh5g4k/image.png)
+
+
 ### How does it work?
 
 - **Grid Visualization:** Your cards are organized into a compact grid, allowing you to view hundreds or thousands of cards at once.
@@ -40,25 +47,6 @@ Memory Mosaic is an Anki addon that transforms your card collection into an inte
 - **Natural Integration:** Automatically appears in the deck browser and overview screen
 - **Automatic Updates:** Updates when you navigate or sync with AnkiWeb
 
-### Example Screenshot
-
-*Add a screenshot of Memory Mosaic in action here.*
-
-![Memory Mosaic example](https://i.ibb.co/8L2f5GjZ/image.png)
-
-![Memory Mosaic example](https://i.ibb.co/5XnVCRq0/image.png)
-
-![Memory Mosaic example](https://i.ibb.co/x8Jh5g4k/image.png)
-
-
-### How to install
-
-1. Open Anki and go to "Tools" > "Add-ons" > "Get Add-ons..."
-2. Paste the addon code and click "OK"
-3. Restart Anki
-
-Or install manually using the `.ankiaddon` file.
-
 ### License and Contact
 
 - **Copyright(C)** [Your Name Here]
@@ -72,6 +60,14 @@ Or install manually using the `.ankiaddon` file.
 ### O que é o Memory Mosaic?
 
 O Memory Mosaic é um addon para o Anki que transforma sua coleção de cartões em uma grade visual interativa. Cada cartão é representado por um pequeno quadrado colorido ("tile"), cuja cor indica o status de aprendizado atual. É semelhante a um desfragmentador de disco, mas para seus cartões de estudo!
+
+*Adicione aqui uma screenshot do Memory Mosaic em ação.*
+
+![Memory Mosaic exemplo](https://i.ibb.co/8L2f5GjZ/image.png)
+
+![Memory Mosaic exemplo](https://i.ibb.co/5XnVCRq0/image.png)
+
+![Memory Mosaic exemplo](https://i.ibb.co/x8Jh5g4k/image.png)
 
 ### Como funciona?
 
@@ -100,25 +96,6 @@ O Memory Mosaic é um addon para o Anki que transforma sua coleção de cartões
 - **Acompanhamento Visual:** Veja a distribuição dos diferentes estados dos cartões imediatamente
 - **Integração Natural:** Aparece automaticamente no navegador de decks e na tela de visão geral
 - **Atualização Automática:** Se atualiza quando você navega ou sincroniza com o AnkiWeb
-
-### Screenshot de Exemplo
-
-*Adicione aqui uma screenshot do Memory Mosaic em ação.*
-
-![Memory Mosaic exemplo](https://i.ibb.co/8L2f5GjZ/image.png)
-
-![Memory Mosaic exemplo](https://i.ibb.co/5XnVCRq0/image.png)
-
-![Memory Mosaic exemplo](https://i.ibb.co/x8Jh5g4k/image.png)
-
-
-### Como instalar
-
-1. Abra o Anki e vá para "Ferramentas" > "Complementos" > "Obter Complementos..."
-2. Cole o código do addon e clique em "OK"
-3. Reinicie o Anki
-
-Ou instale manualmente através do arquivo `.ankiaddon`.
 
 ### Licença e Contato
 
