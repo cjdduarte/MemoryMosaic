@@ -101,3 +101,16 @@ Ou instale manualmente através do arquivo `.ankiaddon`.
 - **Copyright(C)** [Seu Nome Aqui]
 - Licenciado sob [GNU AGPL, version 3](http://www.gnu.org/licenses/agpl.html)
 - Para bugs ou sugestões, abra uma issue no repositório do projeto [link]
+
+## **Changelog**
+
+- **v1.0 - Initial Release**:
+  - Interactive visual grid for card visualization
+  - Color system for card status (new, mature, young, relearning, suspended)
+  - Integration with Deck Browser and Overview screen
+  - Automatic updates when navigating or syncing
+  - Tooltips with detailed information on mouse hover
+  - Interactivity to open cards in Anki's browser
+  - Current deck filtering
+  - Customizable settings (size, spacing, colors)
+  - Multilingual support

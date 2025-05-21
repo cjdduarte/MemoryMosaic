@@ -1,54 +1,32 @@
 # Placeholder for CardGrid addon 
 
 from __future__ import annotations
-import math # Importar o módulo math
-from datetime import datetime # Para formatar timestamp
+import math
+from datetime import datetime
 from typing import Any
-# import os # Não é mais necessário para web exports
 
 from aqt import mw
-# from aqt.qt import QColor # Não estritamente necessário para hex strings
 from aqt.gui_hooks import (
     overview_will_render_content, 
     deck_browser_will_render_content,
-    sync_did_finish # Adicionado hook de sincronização
+    sync_did_finish,
+    webview_did_receive_js_message,
+    profile_will_close,
+    sync_will_start,
+    collection_will_temporarily_close
 )
-from aqt.overview import Overview, OverviewContent # Garante que ambos estão importados
-from aqt.deckbrowser import DeckBrowser, DeckBrowserContent # Adicionadas importações do deckbrowser
-from anki.cards import Card # Para type hinting
-# from aqt.utils import showInfo # Para debug, se necessário
-from aqt import dialogs # Para abrir o Browser
-# from aqt.addons import AddonManager, ConfigEditor # ConfigEditor não é mais usado
+from aqt.overview import Overview, OverviewContent
+from aqt.deckbrowser import DeckBrowser, DeckBrowserContent
+from anki.cards import Card
+from aqt import dialogs
 
-# Importação do módulo de traduções
 from .translations import tr
 
-# Filtro de Deck Global Padrão para Memory Mosaic
-# Se preenchido (ex: "Meu Deck Principal" ou "Deck::Subdeck"), o Memory Mosaic mostrará apenas cartões deste deck e seus subdecks.
-# Se deixado como "" (string vazia), mostrará todos os cartões no Deck Browser, ou os cartões do deck atual no Overview.
-# Esta constante será usada como parte da configuração padrão.
-# MEMORYMOSAIC_DEFAULT_DECK_FILTER = "" # Movido para DEFAULT_CONFIG
-
-# Não precisamos mais do MEMORYMOSAIC_WIDGET_ID para a status bar
-
-# Configurações de Aparência e Comportamento do Memory Mosaic (Constantes Globais para dimensionamento)
-# Estas não são configuráveis via config.json, mas são usadas pela lógica de renderização.
-# MEMORYMOSAIC_DEFAULT_TILE_SIZE_PX = 8   
-# MEMORYMOSAIC_DEFAULT_TILE_GAP_PX = 0    
-# MEMORYMOSAIC_MIN_TILE_SIZE_PX = 6       
-# MEMORYMOSAIC_MAX_GRID_WIDTH_PX = 900    
-# MEMORYMOSAIC_MAX_GRID_HEIGHT_PX = 800   
-# TILE_BORDER_WIDTH_PX = 1           
-# GRID_PADDING_PX = 5                
-
-# --- Início das Definições de Configuração ---
-
+# Variáveis globais para controle de estado
 _memorymosaic_cached_config: dict | None = None
-_session_sort_order_override: str | None = None # Armazena a ordenação da sessão atual
-
-# DEFAULT_CONFIG removido
-
-# ADDON_WINDOW_CONFIG_KEY = "memorymosaic_config_dialog" # Não é mais necessário
+_session_sort_order_override: str | None = None
+_is_syncing: bool = False
+_is_closing: bool = False
 
 def _get_addon_config() -> dict:
     """Carrega a configuração do addon, utilizando um cache interno."""
@@ -57,57 +35,36 @@ def _get_addon_config() -> dict:
         return _memorymosaic_cached_config
 
     if not mw or not hasattr(mw, "addonManager") or not mw.addonManager: 
-        _memorymosaic_cached_config = {} # Cache com dict vazio se addonManager não estiver pronto
+        _memorymosaic_cached_config = {}
         return _memorymosaic_cached_config
         
     config = mw.addonManager.getConfig(__name__)
-    
-    if config is None: # Nenhuma configuração salva
-        _memorymosaic_cached_config = {} # Cache com dict vazio
-    else:
-        _memorymosaic_cached_config = config # Cacheia a configuração lida
-    
+    _memorymosaic_cached_config = config if config is not None else {}
     return _memorymosaic_cached_config
 
-# --- Fim das Definições de Configuração ---
-
-
-# Cores de Fundo (Agora serão lidas da configuração, estas são apenas referências antigas)
-# COLOR_NEW = "#FFFFFF"             # Branco (para Novos, não estudados)
-# COLOR_MATURE = "#66B266"         # Verde Escuro
-# COLOR_YOUNG_LEARN = "#A1E0A1"    # Verde Claro (para jovem/aprendizado)
-# COLOR_RELEARNING_LAPSE = "#E53935" # Vermelho (para reaprendizado/lapso)
-# COLOR_SUSPENDED_BURIED = "#222222" # Alterado para Cinza bem escuro
-# COLOR_DEFAULT_BG = "#E0E0E0"        # Cinza Claro (fallback / erro ao obter cartão)
-
-# Constantes de cor de borda e funções relacionadas removidas
-
-# DEFAULT_TILE_BORDER_COLOR = "#c0c0c0" # Borda padrão para todos os tiles (agora em config)
-
 def _should_show_due_indicator(card: Card | None, config: dict) -> bool:
-    if not config.get("show_due_indicator"): # Padrão True se a chave não existir
+    if not config.get("show_due_indicator"):
+        return False
+    
+    if not mw or not mw.col or not mw.col.sched:
         return False
     
     if not card:
         return False
     
     today = mw.col.sched.today
-
-    # Apenas cartões em aprendizado (1), revisão (2), ou reaprendizado (3)
-    if card.queue in [1, 2, 3]:
-        if card.due <= today:
-            return True
-            
-    return False
+    return card.queue in [1, 2, 3] and card.due <= today
 
 def _get_tile_bg_color(card: Card | None, config: dict) -> str:
     """Determina a cor de fundo do tile com base no status do cartão."""
-    
+    if not mw or not mw.col or not config:
+        return config.get("color_default_bg", "#CCCCCC")
+
     if not card:
         return config.get("color_default_bg")
 
     # 1. Verificar estados que anulam outros (suspenso/enterrado)
-    if card.queue == -1 or card.queue == -2 or card.queue == -3:
+    if card.queue in [-1, -2, -3]:
         return config.get("color_suspended_buried")
 
     # 2. Se não suspenso/enterrado, verificar tipo
@@ -124,18 +81,17 @@ def _get_tile_bg_color(card: Card | None, config: dict) -> str:
         
     # 5. Se não ..., verificar se é revisão
     if card.type == 2:
-        if card.ivl >= 21:
-            return config.get("color_mature")
-        else:
-            return config.get("color_young_learn")
+        return config.get("color_mature") if card.ivl >= 21 else config.get("color_young_learn")
             
     return config.get("color_default_bg")
 
 def _format_last_review_date(cid: int) -> str:
     """Busca e formata a data da última revisão para um cartão."""
+    if not mw or not mw.col or not mw.col.db:
+        return "N/A"
+        
     last_rev_timestamp_ms = mw.col.db.scalar("SELECT max(id) FROM revlog WHERE cid = ?", cid)
     if last_rev_timestamp_ms:
-        # Timestamp no revlog é em milissegundos
         last_rev_dt = datetime.fromtimestamp(last_rev_timestamp_ms / 1000)
         return last_rev_dt.strftime("%Y-%m-%d %H:%M")
     return "N/A"
@@ -150,7 +106,6 @@ def _open_card_in_browser(cid: int) -> None:
             browser.onSearchActivated() 
         else:
             mw.onBrowse({"search": search_string})
-
     except Exception as e:
         print(f"Memory Mosaic: Erro ao tentar abrir o cartão {cid} no navegador: {e}")
 
@@ -158,6 +113,16 @@ def _render_memorymosaic_grid_html(overview_deck_name: str | None = None) -> str
     """Renderiza o HTML para a grade de tiles com base nos cartões da coleção, 
        filtrados opcionalmente por MEMORYMOSAIC_DEFAULT_DECK_FILTER ou overview_deck_name."""
     global _session_sort_order_override # Necessário para modificar a global
+    
+    # Verificação crucial no início da função
+    if not mw or not mw.col or not mw.col.sched or not mw.col.db or not mw.col.decks:
+        # Tenta usar tr() para a mensagem, com fallback se tr() não estiver disponível
+        # ou se as traduções ainda não foram carregadas corretamente.
+        try:
+            return f"<p>{tr('waiting_for_anki_collection_long')}</p>"
+        except Exception: # Captura ampla se tr() ou suas dependências falharem
+            return "<p>Memory Mosaic: Aguardando a coleção de dados do Anki estar completamente pronta...</p>"
+            
     config = _get_addon_config()
     memorymosaic_default_deck_filter = config.get("memorymosaic_default_deck_filter")
 
@@ -209,8 +174,12 @@ def _render_memorymosaic_grid_html(overview_deck_name: str | None = None) -> str
     try:
         # Aplicar a ordenação aqui
         cids = mw.col.find_cards(search_query, order=db_sort_order) 
-    except AttributeError:
-        return "<p>Aguardando coleção do Anki...</p>"
+    except AttributeError: # Esta exceção já existia e é uma boa proteção
+        # Tenta usar tr() para a mensagem
+        try:
+            return f"<p>{tr('waiting_for_anki_collection_short')}</p>"
+        except Exception:
+            return "<p>Aguardando coleção do Anki...</p>"
 
     card_count = len(cids) 
 
@@ -449,23 +418,98 @@ def _render_memorymosaic_grid_html(overview_deck_name: str | None = None) -> str
 
     return title_and_controls_html + color_summary_container_html + grid_html_content + filter_info_footer_html + script_html
 
+def _is_collection_usable() -> bool:
+    """Verifica se a coleção está em um estado utilizável."""
+    if _is_syncing or _is_closing:
+        return False
+        
+    if not mw or not hasattr(mw, 'col') or not mw.col:
+        return False
+        
+    if not hasattr(mw.col, 'db') or not mw.col.db:
+        return False
+        
+    if getattr(mw, '_closeEventHasRun', False):
+        return False
+        
+    if getattr(mw, 'state', '') in ['closing', 'profileManager']:
+        return False
+        
+    try:
+        if not mw.col.db.scalar("SELECT 1"):
+            return False
+    except Exception:
+        return False
+        
+    return True
+
+def on_sync_will_start():
+    """Handler para quando a sincronização vai começar."""
+    global _is_syncing
+    _is_syncing = True
+
+def on_sync_did_finish():
+    """Handler para quando a sincronização termina."""
+    global _is_syncing
+    _is_syncing = False
+    
+    if not _is_collection_usable():
+        return
+        
+    # Pequeno delay para garantir que a coleção esteja estável
+    try:
+        mw.progress.timer(
+            1000,  # Aumentado para 1 segundo para dar mais tempo após sincronização
+            lambda: request_refresh_if_memorymosaic_visible() if _is_collection_usable() else None,
+            False
+        )
+    except Exception:
+        pass
+
+def on_profile_will_close():
+    """Handler para quando o perfil vai ser fechado."""
+    global _is_closing
+    _is_closing = True
+
+def on_collection_will_temporarily_close():
+    """Handler para quando a coleção vai ser temporariamente fechada."""
+    global _is_closing
+    _is_closing = True
+
 def request_refresh_if_memorymosaic_visible() -> None:
     """Força o refresh do Deck Browser ou Overview se o Memory Mosaic estiver visível."""
+    if not _is_collection_usable():
+        return
+
+    if not hasattr(mw, 'state') or mw.state not in ["deckBrowser", "overview"]:
+        return
+
     if mw.state == "deckBrowser":
         if hasattr(mw, 'deckBrowser') and mw.deckBrowser:
-            mw.deckBrowser.refresh()
-            mw.deckBrowser.show() # Adicionado para garantir que a atualização seja visível
+            try:
+                mw.deckBrowser.refresh()
+            except Exception:
+                pass
     elif mw.state == "overview":
         if hasattr(mw, 'overview') and mw.overview:
-            mw.overview.refresh()
-            mw.overview.show() # Adicionado para garantir que a atualização seja visível
+            try:
+                mw.overview.refresh()
+            except Exception:
+                pass
 
 def on_overview_will_render_content(overview_obj: Overview, content_obj: OverviewContent) -> None:
     """Adiciona o container do Memory Mosaic ao conteúdo da visão geral do deck."""
+    # Verificação de segurança
+    if not mw or not mw.col or mw.state == "closing" or mw.state == "profileManager":
+        return
+        
     current_deck_name: str | None = None
     current_deck_id: int | None = None
 
     try:
+        if not overview_obj or not content_obj:
+            return
+            
         # Tenta o método direto primeiro, comum em versões mais antigas ou certas APIs
         current_deck_id = overview_obj.deck_id
     except AttributeError:
@@ -490,20 +534,55 @@ def on_overview_will_render_content(overview_obj: Overview, content_obj: Overvie
 
 def on_deck_browser_will_render_content(deck_browser_obj: DeckBrowser, content_obj: DeckBrowserContent) -> None:
     """Adiciona o container do Memory Mosaic ao conteúdo da lista de decks (deck browser)."""
-    grid_html = _render_memorymosaic_grid_html()
-    content_obj.stats += grid_html
+    # Verificação de segurança
+    if not mw or not mw.col or mw.state == "closing" or mw.state == "profileManager":
+        return
+        
+    if not deck_browser_obj or not content_obj:
+        return
+        
+    try:
+        grid_html = _render_memorymosaic_grid_html()
+        content_obj.stats += grid_html
+    except Exception as e:
+        print(f"Memory Mosaic: Erro ao renderizar grid no deck browser: {e}")
 
-# Hooks
+# Atualiza os hooks com as novas funções
 overview_will_render_content.append(on_overview_will_render_content)
 deck_browser_will_render_content.append(on_deck_browser_will_render_content)
-sync_did_finish.append(request_refresh_if_memorymosaic_visible)
 
+def on_config_changed_refresh_memorymosaic(addon_name: str, key: str, new_value: Any):
+    """Handler para mudanças de configuração."""
+    # O hook config_did_change_hook passa o nome do addon, não o objeto do addon.
+    if addon_name == __name__: 
+        global _memorymosaic_cached_config
+        _memorymosaic_cached_config = None # Invalida o cache
+        
+        # Verifica se é seguro atualizar a interface
+        if not mw or not mw.col or mw.state == "closing" or mw.state == "profileManager":
+            return
+            
+        print(f"Memory Mosaic: Configuração alterada ('{key}'), cache invalidado e visualização será atualizada.")
+        request_refresh_if_memorymosaic_visible()
 
-# --- Lógica de Configuração Removida (on_memorymosaic_settings_clicked, memorymosaic_get_default_config) ---
+# Registra os novos hooks
+sync_will_start.append(on_sync_will_start)
+sync_did_finish.append(on_sync_did_finish)
+profile_will_close.append(on_profile_will_close)
+collection_will_temporarily_close.append(on_collection_will_temporarily_close)
 
+# Após a configuração ser salva (via editor JSON padrão do Anki), 
+# precisamos atualizar a visualização se estiver visível.
+if mw and hasattr(mw, "addonManager") and hasattr(mw.addonManager, "config_did_change_hook"): 
+    mw.addonManager.config_did_change_hook.append(on_config_changed_refresh_memorymosaic)
+elif mw and hasattr(mw, "config") and hasattr(mw.config, "config_did_change_hook"): 
+    mw.config.config_did_change_hook.append(on_config_changed_refresh_memorymosaic)
 
 def handle_memorymosaic_pycmd(handled: tuple[bool, Any], message: str, context: Any) -> tuple[bool, Any]:
     """Manipula comandos pycmd específicos do Memory Mosaic enviados da webview."""
+    if not _is_collection_usable():
+        return handled
+        
     if handled[0]: 
         return handled
 
@@ -513,63 +592,34 @@ def handle_memorymosaic_pycmd(handled: tuple[bool, Any], message: str, context: 
             cid = int(cid_str)
             _open_card_in_browser(cid)
             return (True, None) 
-        except ValueError:
-            print(f"Memory Mosaic: Erro ao processar pycmd '{message}'. CID inválido: '{cid_str}'.")
-            return (True, None) 
-        except Exception as e:
-            print(f"Memory Mosaic: Erro inesperado ao processar pycmd '{message}': {e}")
+        except Exception:
             return (True, None) 
     elif message.startswith("memorymosaic_sort_change:"):
         try:
-            global _session_sort_order_override # Necessário para modificar a global
+            if not _is_collection_usable():
+                return (True, None)
+                
+            global _session_sort_order_override
             new_sort_order = message.split(":")[1]
             valid_sort_orders = ["id_asc", "ivl_asc", "ivl_desc", "due_asc"]
             if new_sort_order in valid_sort_orders:
-                _session_sort_order_override = new_sort_order # Salva na variável de sessão
-                # mw.pm.profile['memorymosaic_sort_order'] = new_sort_order # REMOVIDO: Não salvar no perfil
-                request_refresh_if_memorymosaic_visible()
-            else:
-                print(f"Memory Mosaic: Ordem de sorteio inválida recebida: {new_sort_order}")
+                _session_sort_order_override = new_sort_order
+                try:
+                    mw.progress.timer(
+                        100,
+                        lambda: request_refresh_if_memorymosaic_visible() if _is_collection_usable() else None,
+                        False
+                    )
+                except Exception:
+                    pass
             return (True, None)
-        except Exception as e:
-            print(f"Memory Mosaic: Erro ao processar memorymosaic_sort_change: {e}")
+        except Exception:
             return (True, None)
     
-    return (False, None) 
-
+    return (False, None)
 
 from aqt import gui_hooks
 gui_hooks.webview_did_receive_js_message.append(handle_memorymosaic_pycmd)
-
-# Remover setConfigAction e setWebExports
-# if mw and mw.addonManager:
-#     mw.addonManager.setConfigAction(__name__, on_memorymosaic_settings_clicked) # Removido
-
-# if mw and hasattr(mw, "addonManager") and mw.addonManager:
-#     addon_package = mw.addonManager.addonFromModule(__name__)
-#     if addon_package:
-#         user_files_dir = os.path.join(mw.pm.addonFolder(), addon_package, "web") # os não importado
-#         if os.path.isdir(user_files_dir):
-#             mw.addonManager.setWebExports(__name__, r"web/.*") # Removido
-#         else:
-#             print(f"Memory Mosaic: Pasta 'web' não encontrada. A tela de configuração customizada não funcionaria.")
-
-
-# Após a configuração ser salva (via editor JSON padrão do Anki), 
-# precisamos atualizar a visualização se estiver visível.
-def on_config_changed_refresh_memorymosaic(addon_name: str, key: str, new_value: Any):
-    # O hook config_did_change_hook passa o nome do addon, não o objeto do addon.
-    if addon_name == __name__: 
-        global _memorymosaic_cached_config
-        _memorymosaic_cached_config = None # Invalida o cache
-        print(f"Memory Mosaic: Configuração alterada ('{key}'), cache invalidado e visualização será atualizada.")
-        request_refresh_if_memorymosaic_visible()
-
-if mw and hasattr(mw, "addonManager") and hasattr(mw.addonManager, "config_did_change_hook"): 
-    mw.addonManager.config_did_change_hook.append(on_config_changed_refresh_memorymosaic)
-elif mw and hasattr(mw, "config") and hasattr(mw.config, "config_did_change_hook"): # Algumas versões mais antigas podem ter o hook em mw.config
-     mw.config.config_did_change_hook.append(on_config_changed_refresh_memorymosaic)
-
 
 # O código anterior de add_memorymosaic_placeholder_widget e seu hook main_window_did_init foi removido.
 # Se houvesse outro código além do placeholder da status bar, ele permaneceria.

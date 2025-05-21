@@ -11,6 +11,7 @@ __pycache__/
 *.swo
 *.bak
 *.tmp
+*.zip
 
 # Ignora arquivos de backup do editor
 *~
