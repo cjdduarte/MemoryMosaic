@@ -75,6 +75,9 @@ translations = {
         "gradient_tooltip_range": "Faixa do Gradiente: {min} a {max}",
         "gradient_normalized_value": "Valor normalizado (real: {real})",
         "gradient_dynamic_scale": "Usando escala dinâmica (não normalizada)",
+        "legend_higher_is_better": "(maior é melhor)",
+        "legend_lower_is_better": "(menor é melhor)",
+        "legend_dynamic_scale": "(escala dinâmica)",
         
         # Mensagens
         "loading_mosaic": "Carregando Memory Mosaic...",
@@ -144,6 +147,9 @@ translations = {
         "gradient_tooltip_range": "Gradient Range: {min} to {max}",
         "gradient_normalized_value": "Normalized value (actual: {real})",
         "gradient_dynamic_scale": "Using dynamic scale (non-normalized)",
+        "legend_higher_is_better": "(higher is better)",
+        "legend_lower_is_better": "(lower is better)",
+        "legend_dynamic_scale": "(dynamic scale)",
         
         # Messages
         "loading_mosaic": "Loading Memory Mosaic...",

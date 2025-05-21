@@ -1,8 +1,8 @@
 {
-    "name": "Memory Mosaic (in development)",
-    "package": "defrag",
+    "name": "Memory Mosaic",
+    "package": "memorymosaic",
     "ankiweb_id": "",
-    "author": "Your Name Here",
+    "author": "Carlos D",
     "version": "0.1.0",
     "description": "Visualizes Anki cards as a grid of colored pixels (tiles), showing the learning status of each one.",
     "homepage": "",

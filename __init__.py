@@ -345,12 +345,57 @@ def _render_memorymosaic_grid_html(overview_deck_name: str | None = None) -> str
     color_counts = {} # Inicializa o contador de cores
     gradient_value_stats = {} # Estatísticas para o modo gradiente
 
+    # >>> INÍCIO DAS NOVAS ADIÇÕES PARA IVL DINÂMICO <<<
+    actual_min_ivl_for_norm: int | None = None
+    actual_max_ivl_for_norm: int | None = None
+    normalize_ivl_active = config.get("gradient_normalize_ivl", True) # Padrão True conforme config.md
+
+    if current_view_mode == "gradient" and current_gradient_field == "ivl" and normalize_ivl_active:
+        temp_min_ivl = float('inf')
+        temp_max_ivl = float('-inf')
+        found_any_ivl = False
+        for i_cid in cids: # Usar uma variável de loop diferente para não conflitar com 'cid' depois
+            card_obj = mw.col.get_card(i_cid)
+            if card_obj and card_obj.type != 0 and card_obj.queue not in [-1, -2, -3]:
+                # Considerar apenas cartões que efetivamente usarão o gradiente
+                temp_min_ivl = min(temp_min_ivl, card_obj.ivl)
+                temp_max_ivl = max(temp_max_ivl, card_obj.ivl)
+                found_any_ivl = True
+        
+        if found_any_ivl:
+            actual_min_ivl_for_norm = int(temp_min_ivl)
+            actual_max_ivl_for_norm = int(temp_max_ivl)
+        else:
+            # Fallback para config se nenhum cartão aplicável for encontrado
+            actual_min_ivl_for_norm = config.get("gradient_ivl_min", 0)
+            actual_max_ivl_for_norm = config.get("gradient_ivl_max", 365)
+        
+        # Garantir que min não seja maior que max, e que não sejam iguais para _get_gradient_color
+        if actual_min_ivl_for_norm is not None and actual_max_ivl_for_norm is not None:
+            if actual_min_ivl_for_norm > actual_max_ivl_for_norm: # Caso raro, mas possível se houver apenas um valor e ele for usado para ambos
+                 actual_max_ivl_for_norm = actual_min_ivl_for_norm 
+            # _get_gradient_color já trata min_val == max_val retornando a cor média
+    # >>> FIM DAS NOVAS ADIÇÕES PARA IVL DINÂMICO <<<
+
     for cid in cids: 
         card = mw.col.get_card(cid)
         
         # Determinar a cor com base no modo de visualização
         if current_view_mode == "gradient":
-            bg_color = _get_gradient_tile_color(card, current_gradient_field, config)
+            bg_color = "" # Inicializa bg_color
+            if current_gradient_field == "ivl":
+                min_limit_for_color = config.get("gradient_ivl_min", 0)
+                max_limit_for_color = config.get("gradient_ivl_max", 365)
+                if normalize_ivl_active and actual_min_ivl_for_norm is not None and actual_max_ivl_for_norm is not None:
+                    min_limit_for_color = actual_min_ivl_for_norm
+                    max_limit_for_color = actual_max_ivl_for_norm
+                
+                bg_color = _get_gradient_tile_color(card, current_gradient_field, config, 
+                                                    ivl_min_override=min_limit_for_color, 
+                                                    ivl_max_override=max_limit_for_color)
+            else:
+                # Para outros campos, não há overrides de ivl
+                bg_color = _get_gradient_tile_color(card, current_gradient_field, config)
             
             # Coletar estatísticas para o modo gradiente
             if card and current_gradient_field in ["factor", "ivl", "reps", "lapses", "due"]:
@@ -408,22 +453,21 @@ def _render_memorymosaic_grid_html(overview_deck_name: str | None = None) -> str
                 elif current_gradient_field == "ivl":
                     tooltip_parts.append(tr("gradient_tooltip_value", value=card.ivl))
                     
-                    # Verificar se estamos no modo normalizado ou não
-                    normalize_ivl = config.get("gradient_normalize_ivl", True)
-                    min_val = config.get("gradient_ivl_min", 0)
-                    max_val = config.get("gradient_ivl_max", 365)
-                    
-                    if normalize_ivl:
-                        tooltip_parts.append(tr("gradient_tooltip_range", min=min_val, max=max_val))
-                        # Adicionar uma nota se o valor real está além do máximo
-                        if card.ivl > max_val:
-                            tooltip_parts.append(tr("gradient_normalized_value", real=card.ivl))
+                    # normalize_ivl_active e actual_min/max_ivl_for_norm já foram definidos anteriormente
+                    if normalize_ivl_active and actual_min_ivl_for_norm is not None and actual_max_ivl_for_norm is not None:
+                        # Usar a faixa dinâmica para o tooltip
+                        tooltip_parts.append(tr("gradient_tooltip_range", min=actual_min_ivl_for_norm, max=actual_max_ivl_for_norm))
+                        # Não é necessário (valor real: X) aqui, pois a cor e a faixa refletem o conjunto de dados
                     else:
-                        # Se não normalizado, mostrar range dinâmico
-                        actual_max = max(max_val, card.ivl)
-                        tooltip_parts.append(tr("gradient_tooltip_range", min=min_val, max=actual_max))
-                        if card.ivl > max_val:
-                            tooltip_parts.append(tr("gradient_dynamic_scale"))
+                        # Usar a faixa do config para o tooltip
+                        config_min_ivl = config.get("gradient_ivl_min", 0)
+                        config_max_ivl = config.get("gradient_ivl_max", 365)
+                        tooltip_parts.append(tr("gradient_tooltip_range", min=config_min_ivl, max=config_max_ivl))
+                        # Se o valor real do cartão estiver fora da faixa de config (e não estamos normalizando dinamicamente),
+                        # adicionar uma nota com o valor real.
+                        if card.ivl < config_min_ivl or card.ivl > config_max_ivl:
+                            tooltip_parts.append(tr("gradient_normalized_value", real=card.ivl))
+                            
                 elif current_gradient_field == "reps":
                     tooltip_parts.append(tr("gradient_tooltip_value", value=card.reps))
                     tooltip_parts.append(tr("gradient_tooltip_range", min=config.get("gradient_reps_min", 0), max=config.get("gradient_reps_max", 25)))
@@ -517,14 +561,29 @@ def _render_memorymosaic_grid_html(overview_deck_name: str | None = None) -> str
         max_val = 100
         gradient_field_label = ""
         
+        # Determinar a ordem do gradiente PRIMEIRO, para usar no texto da legenda
+        order_config_key_legend = f"gradient_{current_gradient_field}_order"
+        default_order_legend = "asc"
+        if current_gradient_field == "lapses": # Lapses: menor é melhor por padrão
+            default_order_legend = "desc"
+        field_order_legend = config.get(order_config_key_legend, default_order_legend)
+        # Agora field_order_legend pode ser usado para o texto e para as cores da barra
+
+        field_order_for_legend_text = field_order_legend # Usar a ordem determinada para o texto
+        
         if current_gradient_field == "factor":
             min_val = config.get("gradient_factor_min", 1500)
             max_val = config.get("gradient_factor_max", 2900)
             gradient_field_label = tr("gradient_field_factor")
         elif current_gradient_field == "ivl":
-            min_val = config.get("gradient_ivl_min", 0)
-            max_val = config.get("gradient_ivl_max", 365)
             gradient_field_label = tr("gradient_field_ivl")
+            if normalize_ivl_active and actual_min_ivl_for_norm is not None and actual_max_ivl_for_norm is not None:
+                min_val = actual_min_ivl_for_norm
+                max_val = actual_max_ivl_for_norm
+                gradient_field_label += f" {tr('legend_dynamic_scale')}" # Adiciona (escala dinâmica)
+            else:
+                min_val = config.get("gradient_ivl_min", 0)
+                max_val = config.get("gradient_ivl_max", 365)
         elif current_gradient_field == "reps":
             min_val = config.get("gradient_reps_min", 0)
             max_val = config.get("gradient_reps_max", 25)
@@ -537,17 +596,29 @@ def _render_memorymosaic_grid_html(overview_deck_name: str | None = None) -> str
             min_val = config.get("gradient_due_min", 0)
             max_val = config.get("gradient_due_max", 90)
             gradient_field_label = tr("gradient_field_due")
+
+        # Adicionar indicador de "melhor" para a legenda
+        if field_order_for_legend_text == "asc":
+            gradient_field_label += f" {tr('legend_higher_is_better')}"
+        elif field_order_for_legend_text == "desc":
+            gradient_field_label += f" {tr('legend_lower_is_better')}"
             
-        # Cores do gradiente
-        start_color = config.get("gradient_color_start", "#FFEB3B")
-        mid_color = config.get("gradient_color_mid", "#4CAF50")
-        end_color = config.get("gradient_color_end", "#1565C0")
+        # Cores do gradiente para a legenda
+        display_start_color = config.get("gradient_color_start", "#FFEB3B")
+        display_mid_color = config.get("gradient_color_mid", "#4CAF50")
+        display_end_color = config.get("gradient_color_end", "#1565C0")
         
+        # field_order_legend já foi definido acima
+        if field_order_legend == "desc":
+            # Inverter as cores para a legenda se a ordem for descendente
+            display_start_color, display_end_color = display_end_color, display_start_color
+            # A cor do meio permanece a mesma, pois a inversão é entre start e end
+
         # Criar uma legenda de gradiente
         gradient_legend_html = f'''
 <div style="max-width: {grid_max_width_px}px; margin-left: auto; margin-right: auto; margin-bottom: 5px; padding: 8px 0; display: flex; flex-direction: column; align-items: center; font-size: 0.9em;">
     <p style="font-weight: bold; margin: 0 0 5px 0;">{tr("summary_title")}: {gradient_field_label} ({min_val} - {max_val})</p>
-    <div style="width: 80%; max-width: 400px; height: 20px; background: linear-gradient(to right, {start_color}, {mid_color}, {end_color}); border-radius: 3px; margin-bottom: 3px;"></div>
+    <div style="width: 80%; max-width: 400px; height: 20px; background: linear-gradient(to right, {display_start_color}, {display_mid_color}, {display_end_color}); border-radius: 3px; margin-bottom: 3px;"></div>
     <div style="display: flex; justify-content: space-between; width: 80%; max-width: 400px;">
         <span>{min_val}</span>
         <span>{(min_val + max_val) // 2}</span>
@@ -669,7 +740,7 @@ def _rgb_to_hex(rgb: tuple[int, int, int]) -> str:
     """Converte cor RGB para hexadecimal."""
     return '#{:02x}{:02x}{:02x}'.format(*rgb)
 
-def _get_gradient_color(value: float, min_val: float, max_val: float, config: dict) -> str:
+def _get_gradient_color(value: float, min_val: float, max_val: float, config: dict, invert_gradient: bool = False) -> str:
     """Calcula a cor do gradiente para um valor entre o mínimo e o máximo."""
     # Prevenir divisão por zero
     if min_val == max_val:
@@ -677,6 +748,9 @@ def _get_gradient_color(value: float, min_val: float, max_val: float, config: di
         
     # Normalizar o valor para [0, 1]
     normalized = max(0, min(1, (value - min_val) / (max_val - min_val)))
+    
+    if invert_gradient:
+        normalized = 1.0 - normalized
     
     # Obter cores do gradiente do config
     start_color = config.get("gradient_color_start", "#FFEB3B")  # Amarelo
@@ -705,7 +779,7 @@ def _get_gradient_color(value: float, min_val: float, max_val: float, config: di
     # Converter de volta para hex
     return _rgb_to_hex((r, g, b))
 
-def _get_gradient_tile_color(card: Card | None, field: str, config: dict) -> str:
+def _get_gradient_tile_color(card: Card | None, field: str, config: dict, ivl_min_override: int | None = None, ivl_max_override: int | None = None) -> str:
     """Determina a cor do tile com base no gradiente do campo selecionado."""
     if not card:
         return config.get("color_default_bg", "#CCCCCC")
@@ -713,6 +787,10 @@ def _get_gradient_tile_color(card: Card | None, field: str, config: dict) -> str
     # Cartões suspensos/enterrados sempre têm a mesma cor
     if card.queue in [-1, -2, -3]:
         return config.get("color_suspended_buried", "#222222")
+        
+    # Cartões novos devem usar a cor de 'novo' do config, mesmo no modo gradiente
+    if card.type == 0:
+        return config.get("color_new", "#FFFFFF") # Cor para cartões novos
         
     # Obter o valor de acordo com o campo
     value = None
@@ -725,15 +803,12 @@ def _get_gradient_tile_color(card: Card | None, field: str, config: dict) -> str
         max_val = config.get("gradient_factor_max", 2900)
     elif field == "ivl":
         value = card.ivl
-        min_val = config.get("gradient_ivl_min", 0)
-        max_val = config.get("gradient_ivl_max", 365)
-        
-        # Verificar se devemos normalizar o gradiente para ivl
-        normalize_ivl = config.get("gradient_normalize_ivl", True)
-        if not normalize_ivl and value > max_val:
-            # Se não normalizar, ajustar o max_val para o valor real do cartão
-            # Isso fará com que o gradiente se expanda dinamicamente
-            max_val = value
+        if ivl_min_override is not None and ivl_max_override is not None:
+            min_val = ivl_min_override
+            max_val = ivl_max_override
+        else: # Fallback se overrides não forem passados (não deveria acontecer com a nova lógica)
+            min_val = config.get("gradient_ivl_min", 0)
+            max_val = config.get("gradient_ivl_max", 365)
     elif field == "reps":
         value = card.reps
         min_val = config.get("gradient_reps_min", 0)
@@ -760,8 +835,21 @@ def _get_gradient_tile_color(card: Card | None, field: str, config: dict) -> str
     if value is None:
         return config.get("color_default_bg", "#CCCCCC")
         
+    # Determinar se o gradiente deve ser invertido
+    invert_gradient = False
+    order_config_key = f"gradient_{field}_order"
+    
+    # Definir padrões de ordem para cada campo
+    default_order = "asc"
+    if field == "lapses": # Para lapsos, menor é melhor, então a ordem natural do gradiente invertido é desejada
+        default_order = "desc"
+    
+    field_order = config.get(order_config_key, default_order)
+    if field_order == "desc":
+        invert_gradient = True
+        
     # Calcular a cor do gradiente
-    return _get_gradient_color(value, min_val, max_val, config)
+    return _get_gradient_color(value, min_val, max_val, config, invert_gradient=invert_gradient)
 
 def on_sync_will_start():
     """Handler para quando a sincronização vai começar."""
