@@ -44,6 +44,7 @@ translations = {
         "tooltip_type": "Tipo: {type}",
         "tooltip_interval": "Intervalo: {interval} dias",
         "tooltip_never_reviewed": "Nunca revisado",
+        "tooltip_factor": "Fator: {factor}",
         
         # Status dos cartões (para tooltips e sumário)
         "card_status_new": "Novos",
@@ -121,6 +122,7 @@ translations = {
         "tooltip_type": "Type: {type}",
         "tooltip_interval": "Interval: {interval} days",
         "tooltip_never_reviewed": "Never reviewed",
+        "tooltip_factor": "Factor: {factor}",
         
         # Card statuses (for tooltips and summary)
         "card_status_new": "New",

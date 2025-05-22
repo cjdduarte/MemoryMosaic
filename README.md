@@ -105,6 +105,11 @@ O Memory Mosaic é um addon para o Anki que transforma sua coleção de cartões
 
 ## **Changelog**
 
+- **v1.3 - 2025-05-22 - Configuration Improvements & UI Enhancement**:
+  - Removed default values from configuration retrieval functions, making the addon more resilient to missing configuration keys.
+  - Added "Factor" field to card tooltips, showing the card's ease factor value for better visualization of Anki's scheduling algorithm parameters.
+  - Fixed translation-related issues for consistency between UI elements.
+
 - **v1.2 - 2025-05-21 - Performance Optimizations & Progressive Loading**: 
   - Optimized fetching of last review dates for tooltips (batch query instead of per-card query), significantly improving performance on large collections.
   - Optimized calculation of "today's date" for due checks and gradient calculations (calculated once per grid render).

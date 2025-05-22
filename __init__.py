@@ -494,6 +494,7 @@ def _render_memorymosaic_grid_html(overview_deck_name: str | None = None) -> str
             tooltip_parts.append(tr("tooltip_queue", queue=card.queue))
             tooltip_parts.append(tr("tooltip_type", type=card.type))
             tooltip_parts.append(tr("tooltip_interval", interval=card.ivl))
+            tooltip_parts.append(tr("tooltip_factor", factor=card.factor))
             
             # Adicionar informações específicas do gradiente se no modo gradiente
             if current_view_mode == "gradient":
