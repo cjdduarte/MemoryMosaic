@@ -77,7 +77,8 @@ def _get_tile_bg_color(card: Card | None, config: dict) -> str:
         return config.get("color_new")
     
     # 3. Se não suspenso/enterrado/novo, verificar se está em reaprendizado
-    if card.queue == 3:
+    # Verifica tanto queue=3 quanto type=3 (cartões em reaprendizado/lapso)
+    if card.queue == 3 or card.type == 3:
         return config.get("color_relearning_lapse")
     
     # 4. Se não ..., verificar se está em aprendizado
@@ -592,10 +593,21 @@ def _render_memorymosaic_grid_html(overview_deck_name: str | None = None) -> str
             color_swatch_style = f"display: inline-block; width: 12px; height: 12px; background-color: {color_hex}; border: 1px solid #888; margin-right: 5px; vertical-align: middle;"
             color_summary_items_html_parts.append(f'<span style="display: inline-flex; align-items: center; white-space: nowrap;"><span style="{color_swatch_style}"></span>{label}: {count}</span>')
         
-        # Adicionar legenda para o indicador de cartões devidos hoje
-        if config.get("show_due_indicator"):
-            due_dot_style = f"display: inline-block; width: 12px; height: 12px; background-color: {due_indicator_color}; border: 1px solid #888; margin-right: 5px; vertical-align: middle; border-radius: 50%;"
-            color_summary_items_html_parts.append(f'<span style="display: inline-flex; align-items: center; white-space: nowrap;"><span style="{due_dot_style}"></span>{tr("card_status_due")}</span>')
+        # Adicionar legenda para o indicador de cartões devidos hoje        
+        if config.get("show_due_indicator"):            
+            # Criamos um quadrado para simular o cartão com o indicador no centro            
+            tile_sample_size = 14            
+            tile_border_color = config.get('tile_border_color')            
+            due_dot_size = 6  # Tamanho menor para o indicador dentro do tile de amostra
+            
+            # Estilo do "cartão" de amostra (quadrado com borda)            
+            tile_sample_style = f"display: inline-block; width: {tile_sample_size}px; height: {tile_sample_size}px; background-color: #EEEEEE; border: 1px solid {tile_border_color}; margin-right: 5px; vertical-align: middle; position: relative;"
+            
+            # Estilo do indicador (ponto vermelho centralizado)            
+            due_dot_style = f"position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: {due_dot_size}px; height: {due_dot_size}px; background-color: {due_indicator_color}; border-radius: 50%;"
+            
+            # Adiciona o item à lista com o tile contendo o indicador            
+            color_summary_items_html_parts.append(f'<span style="display: inline-flex; align-items: center; white-space: nowrap;"><span style="{tile_sample_style}"><span style="{due_dot_style}"></span></span>{tr("card_status_due")}</span>')
         
         color_summary_items_html = ' ' .join(color_summary_items_html_parts) # Espaço entre itens
 
@@ -677,10 +689,20 @@ def _render_memorymosaic_grid_html(overview_deck_name: str | None = None) -> str
         
         # Adicionar legenda para o indicador de cartões devidos hoje no modo gradiente, se estiver ativado
         if config.get("show_due_indicator"):
-            due_dot_style = f"display: inline-block; width: 12px; height: 12px; background-color: {due_indicator_color}; border: 1px solid #888; margin-right: 5px; vertical-align: middle; border-radius: 50%;"
+            # Criamos um quadrado para simular o cartão com o indicador no centro            
+            tile_sample_size = 14            
+            tile_border_color = config.get('tile_border_color')            
+            due_dot_size = 6  # Tamanho menor para o indicador dentro do tile de amostra
+            
+            # Estilo do "cartão" de amostra (quadrado com borda)            
+            tile_sample_style = f"display: inline-block; width: {tile_sample_size}px; height: {tile_sample_size}px; background-color: #EEEEEE; border: 1px solid {tile_border_color}; margin-right: 5px; vertical-align: middle; position: relative;"
+            
+            # Estilo do indicador (ponto vermelho centralizado)            
+            due_dot_style = f"position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: {due_dot_size}px; height: {due_dot_size}px; background-color: {due_indicator_color}; border-radius: 50%;"
+            
             due_indicator_legend_html = f'''
 <div style="text-align: center; margin-top: 0px; max-width: {grid_max_width_px}px; margin-left: auto; margin-right: auto; font-size: 0.9em;">
-    <span style="display: inline-flex; align-items: center; white-space: nowrap;"><span style="{due_dot_style}"></span>{tr("card_status_due")}</span>
+    <span style="display: inline-flex; align-items: center; white-space: nowrap;"><span style="{tile_sample_style}"><span style="{due_dot_style}"></span></span>{tr("card_status_due")}</span>
 </div>
 '''
             color_summary_container_html += due_indicator_legend_html

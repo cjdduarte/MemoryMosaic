@@ -105,6 +105,14 @@ O Memory Mosaic é um addon para o Anki que transforma sua coleção de cartões
 
 ## **Changelog**
 
+- **v1.5 - 2025-05-22 - Classification Fix**:
+  - Fixed bug that incorrectly classified relearning cards with `type=3` and `queue=1` as "Default/Error" instead of "Relearning/Lapse".
+  - Memory Mosaic now correctly identifies all relearning cards, regardless of the type/queue combination.
+
+- **v1.4 - 2025-05-22 - Visual Enhancement**:
+  - Added visual indicator for due cards in the summary, showing a rectangle with a centered red dot, simulating how the indicator appears on cards in the grid.
+  - Improved summary legend for better understanding of visual elements.
+
 - **v1.3 - 2025-05-22 - Configuration Improvements & UI Enhancement**:
   - Removed default values from configuration retrieval functions, making the addon more resilient to missing configuration keys.
   - Added "Factor" field to card tooltips, showing the card's ease factor value for better visualization of Anki's scheduling algorithm parameters.
