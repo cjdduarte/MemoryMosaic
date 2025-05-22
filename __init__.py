@@ -592,6 +592,11 @@ def _render_memorymosaic_grid_html(overview_deck_name: str | None = None) -> str
             color_swatch_style = f"display: inline-block; width: 12px; height: 12px; background-color: {color_hex}; border: 1px solid #888; margin-right: 5px; vertical-align: middle;"
             color_summary_items_html_parts.append(f'<span style="display: inline-flex; align-items: center; white-space: nowrap;"><span style="{color_swatch_style}"></span>{label}: {count}</span>')
         
+        # Adicionar legenda para o indicador de cartões devidos hoje
+        if config.get("show_due_indicator"):
+            due_dot_style = f"display: inline-block; width: 12px; height: 12px; background-color: {due_indicator_color}; border: 1px solid #888; margin-right: 5px; vertical-align: middle; border-radius: 50%;"
+            color_summary_items_html_parts.append(f'<span style="display: inline-flex; align-items: center; white-space: nowrap;"><span style="{due_dot_style}"></span>{tr("card_status_due")}</span>')
+        
         color_summary_items_html = ' ' .join(color_summary_items_html_parts) # Espaço entre itens
 
         color_summary_container_html = f'''
@@ -669,6 +674,16 @@ def _render_memorymosaic_grid_html(overview_deck_name: str | None = None) -> str
 </div>
 '''
         color_summary_container_html = gradient_legend_html
+        
+        # Adicionar legenda para o indicador de cartões devidos hoje no modo gradiente, se estiver ativado
+        if config.get("show_due_indicator"):
+            due_dot_style = f"display: inline-block; width: 12px; height: 12px; background-color: {due_indicator_color}; border: 1px solid #888; margin-right: 5px; vertical-align: middle; border-radius: 50%;"
+            due_indicator_legend_html = f'''
+<div style="text-align: center; margin-top: 0px; max-width: {grid_max_width_px}px; margin-left: auto; margin-right: auto; font-size: 0.9em;">
+    <span style="display: inline-flex; align-items: center; white-space: nowrap;"><span style="{due_dot_style}"></span>{tr("card_status_due")}</span>
+</div>
+'''
+            color_summary_container_html += due_indicator_legend_html
 
     grid_html_content = f'<div id="memorymosaic-grid-container" style="{grid_container_style}">{all_tiles_html}</div>'
 
