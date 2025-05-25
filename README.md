@@ -105,6 +105,9 @@ O Memory Mosaic é um addon para o Anki que transforma sua coleção de cartões
 
 ## **Changelog**
 
+- **v1.6 - 2025-05-25 - Configuration**:
+  - Updated default values for `gradient_factor_min` (to 2100) and `gradient_factor_max` (to 2900) in `config.json`.
+  
 - **v1.5 - 2025-05-22 - Classification Fix**:
   - Fixed bug that incorrectly classified relearning cards with `type=3` and `queue=1` as "Default/Error" instead of "Relearning/Lapse".
   - Memory Mosaic now correctly identifies all relearning cards, regardless of the type/queue combination.

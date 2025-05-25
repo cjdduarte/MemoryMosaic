@@ -106,7 +106,7 @@ Após modificar o `config.json` diretamente, pode ser necessário reiniciar o An
     *   Observação: Este parâmetro afeta apenas o campo "ivl" (intervalo).
 
 *   Valores mínimos e máximos para cada campo de gradiente:
-    *   `"gradient_factor_min"` e `"gradient_factor_max"`: Faixa para o fator de facilidade (1500-2900).
+    *   `"gradient_factor_min"` e `"gradient_factor_max"`: Faixa para o fator de facilidade (2100-2900).
     *   `"gradient_factor_order"`: Define a direção do gradiente para o fator de facilidade.
         *   `"asc"` (Padrão): Valores maiores (melhor fator) tendem a `gradient_color_end`.
         *   `"desc"`: Valores menores (pior fator, embora menos comum para "ease") tendem a `gradient_color_end`.
@@ -237,7 +237,7 @@ After modifying the `config.json` directly, you may need to restart Anki for the
     *   Note: This parameter only affects the "ivl" (interval) field.
 
 *   Minimum and maximum values for each gradient field:
-    *   `"gradient_factor_min"` and `"gradient_factor_max"`: Range for ease factor (1500-2900).
+    *   `"gradient_factor_min"` and `"gradient_factor_max"`: Range for ease factor (2100-2900).
     *   `"gradient_factor_order"`: Defines the gradient direction for ease factor.
         *   `"asc"` (Default): Higher values (better factor) tend towards `gradient_color_end`.
         *   `"desc"`: Lower values (worse factor, though less common for "ease") tend towards `gradient_color_end`.
